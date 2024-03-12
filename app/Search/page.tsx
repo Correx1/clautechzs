@@ -41,7 +41,7 @@ const SearchPage: React.FC = () => {
                 <SearchInput onSearch={fetchSearchResults} />
 
                 {results.length === 0 && query !== "" ? (
-                    <p className="text-center text-gray-500 text-lg font-semibold">No products found for "{query}" unavailable</p>
+                    <p className="text-center text-gray-500 text-lg font-semibold">No products found for {query} unavailable</p>
                 ) : (
                     <div className=' md:px-12 lg:py-3 px-2  grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-6 gap-4 gap-y-8' >
                         {results.map((result: any, id: number) => (

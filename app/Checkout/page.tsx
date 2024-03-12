@@ -254,7 +254,7 @@ function Page() {
             </div>
             
             <div>
-              <h1 className= "italic mt-2 mb-1" >Only fill if it's either shoes or clothes</h1>
+              <h1 className= "italic mt-2 mb-1" >Only fill if its either shoes or clothes</h1>
               <div className="mb-4 flex flex-row w-full gap-4 ">
                 <div>
                   <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
