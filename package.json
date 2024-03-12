@@ -13,6 +13,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",
     "@sanity/image-url": "^1.0.2",
+    "@sanity/vision": "3.32.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "embla-carousel-autoplay": "^8.0.0-rc23",
