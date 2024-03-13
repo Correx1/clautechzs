@@ -4,7 +4,7 @@ import "./globals.css";
 import Cart from "./components/Cart";
 import CartProvider from "./components/Provider";
 import { Toaster } from "@/components/ui/toaster"
-
+import LoaderLayout from "./components/Loader";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,9 +25,9 @@ export default function RootLayout({
         
         <CartProvider>
           <Toaster />
-            <Cart />       
-          {children}   
-      </CartProvider>  
+            <Cart />         
+          <LoaderLayout> {children}</LoaderLayout>
+        </CartProvider>  
       </body>
     </html>
   );

@@ -14,7 +14,7 @@ const LoaderLayout: React.FC<LoaderLayoutProps> = ({ children }) => {
     React.useEffect(() => {
         const timer = setTimeout(() => {
             setLoading(false);
-        }, 1000);
+        }, 4000);
 
         return () => clearTimeout(timer);
     }, []);
