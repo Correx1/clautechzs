@@ -54,7 +54,7 @@ function Page() {
     amount: totalPrice,
     currency: "NGN",
     payment_options: "card,mobilemoney,ussd",
-    redirect_url: "clautechzs.vercel.app/success",
+    redirect_url: "/success",
     customer: {
       email: formData.email,
       phone_number: formData.phone,
