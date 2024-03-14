@@ -26,15 +26,15 @@ const SuccessPage: React.FC = () => {
       <div className="flex items-center justify-center mb-4">
         <CheckCircle className="w-8 h-8 text-green-500 mr-2" />
        
-        <h1 className="text-2xl font-bold">Thank You! Your Payment Was Successful</h1>
+        <h1 className="text-xl font-bold">Thank You! Your Payment Was Successful</h1>
       </div>
-      <div className="bg-white p-8 rounded shadow-md">
+      <div className="bg-white p-6 rounded shadow-md">
         <h1 className="text-xl font-bold mb-4">Payment Status: {status}</h1>
         <p className="mb-2 text-xl font-bold">Order NO: {tx_ref}</p>
         <p className="mb-2 text-xl font-bold">Transaction ID: {transaction_id}</p>
         <p className="text-sm text-gray-700 italic">Note: The Order NO. may be requested for during delivery.</p>
         <Button 
-        className=' text-center items-center justify-center'
+        className=' text-center items-center justify-center mt-2'
         > <Link href={"/"}> Return to Homepage </Link></Button>
       </div>
     </div>
