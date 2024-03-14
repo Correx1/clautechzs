@@ -7,7 +7,7 @@ import AddToCart from '@/app/components/AddToCart';
 
 
 async function getData() {
-    const query = `*[_type =="product"][0...12]|order(_createdAt desc){
+    const query = `*[_type =="product"][0...10]|order(_createdAt desc){
         _id,
         price,
         fakePrice,

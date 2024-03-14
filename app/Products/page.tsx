@@ -14,7 +14,7 @@ import SubFooter from '@/app/components/SubFooter'
 import CartIcon from '@/app/components/CartIcon'
 
 async function getData(skip: number) {
-  const query = `*[_type =="product"]|order(_createdAt desc){
+  const query = `*[_type =="product"]|order(_createdAt asc){
         _id,
         price,
         fakePrice,

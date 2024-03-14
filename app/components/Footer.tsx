@@ -27,7 +27,7 @@ function Footer() {
         <div className="mt-5">
           <h2 className=' text-xl font-bold'>Customer Care</h2>
           <p className=' italic text-base text-gray-700 pt-2'> <span className=' font-bold text-black normal-case'>Note:</span> This is only for failed or interupted checkout</p>
-          <Link href="/"><Button className=' mt-3'><Phone size={15} />Chat </Button></Link> 
+          <Link href="https://wa.link/d2brhe"><Button className=' mt-3'><Phone size={15} />Chat </Button></Link> 
        
         </div>
       </div>

@@ -33,7 +33,7 @@ const SuccessPage: React.FC = () => {
         <p className="mb-2 text-xl font-bold">Order NO: {tx_ref}</p>
         <p className="mb-2 text-xl font-bold">Transaction ID: {transaction_id}</p>
         <p className="text-sm text-gray-700 italic">Note: The Order NO. may be requested for during delivery.</p>
-        <Button 
+        <Button onClick={()=>clearCart()}
         className=' text-center items-center justify-center mt-2'
         > <Link href={"/"}> Return to Homepage </Link></Button>
       </div>
