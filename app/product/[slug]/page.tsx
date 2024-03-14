@@ -73,7 +73,7 @@ async function Page({
                   <div className="flex items-end gap-2">
                     <span className='font-bold text-gray-700 text-lg md:text-xl'>₦{data.price}</span>
                     <span className=" text-base md:text-lg text-red-500 line-through">
-                      ${data.fakePrice}
+                    ₦{data.fakePrice}
                     </span>
                   </div>
                 </div>

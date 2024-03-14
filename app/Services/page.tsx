@@ -249,40 +249,43 @@ function Page() {
               {errors.phone && <p className="text-red-500  text-sm mt-1">Invalid phone no.</p>}
             </div>
 
-            <div className="mb-4 flex flex-row w-full gap-4 ">
-              <div>
-                <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                  shoes (32-48)
-                </label>
-                <input
-                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
-                  type="tel"
-                  id="size"
-                  name="size"
-                  placeholder="For shoes only"
-                  value={formData.size}
-                  onChange={handleChange}
-                />
-                {errors.size && <p className="text-red-500  text-sm mt-1">{errors.size}</p>}
+            <div>
+              <h1 className="italic mt-3 mb-1" >Only fill if its either shoes or clothes</h1>
+              <div className="mb-4 flex flex-row w-full gap-4 ">
+                <div>
+                  <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
+                    shoes (32-48)
+                  </label>
+                  <input
+                    className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
+                    type="tel"
+                    id="size"
+                    name="size"
+                    placeholder="Shoes only"
+                    value={formData.size}
+                    onChange={handleChange}
+                  />
+                  {errors.size && <p className="text-red-500  text-sm mt-1">{errors.size}</p>}
+                </div>
+
+
+                <div>
+                  <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
+                    clothes(sm,md,lg,xl,xxl)
+                  </label>
+                  <input
+                    className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
+                    type="text"
+                    id="clothSize"
+                    name="clothSize"
+                    placeholder="Clothes only"
+                    value={formData.clothSize}
+                    onChange={handleChange}
+                  />
+                  {errors.clothSize && <p className="text-red-500  text-sm mt-1">Select from the above listed sizes</p>}
+                </div>
+
               </div>
-
-
-              <div>
-                <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                  clothes(sm,md,lg,xl,xxl)
-                </label>
-                <input
-                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
-                  type="text"
-                  id="clothSize"
-                  name="clothSize"
-                  placeholder="Enter size"
-                  value={formData.clothSize}
-                  onChange={handleChange}
-                />
-                {errors.clothSize && <p className="text-red-500  text-sm mt-1">Select from the above listed sizes</p>}
-              </div>
-
             </div>
 
             <Button className="mb-4 items-center justify-center" type="submit">Submit</Button>

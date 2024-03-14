@@ -142,7 +142,7 @@ function Page() {
         clothSize: '',
       });
 
-      clearCart(); // Clear the cart
+     
     }
   }
 
@@ -185,7 +185,7 @@ function Page() {
               </li>
             ))}
           </ul>
-          <p className='py-2 text-lg text-gray-800 font-bold'>Total price: {totalPrice}</p>
+          <p className='py-2 text-lg text-gray-800 font-bold'>Total price: ₦{totalPrice}</p>
         </div>
 
         <form className="" onSubmit={handleSubmit}>
