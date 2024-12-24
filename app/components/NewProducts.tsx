@@ -30,8 +30,8 @@ const NewProducts = async () => {
                     <div className="embla__slide md:basis-1/2 lg:basis-1/6 flex flex-row pb-3" key={_id}>
                         <Link href={`/product/${product.slug}`}>
                             <div className='mx-2 h-[210px] w-[190px] p-3 bg-[#f5f5f5] shadow-[rgba(0,_0,_0,0.14)_0px_3px_8px] rounded-lg relative overflow-hidden'>
-                                <div className="absolute top-0 right-2 line-through bg-[#f97e27] text-white py-1 px-2 text-xs rounded-e-md">
-                                    ₦{product.fakePrice}
+                                <div className="absolute top-0 right-2  bg-[#f97e27] text-white py-1 px-2 text-xs rounded-e-md">
+                                { Math.round(((product.fakePrice - product.price) / product.fakePrice) * 100)}% OFF
                                 </div>
                                 <Image src={product.imageUrl} alt={product.name}
                                     className="w-full h-32 object-contain"

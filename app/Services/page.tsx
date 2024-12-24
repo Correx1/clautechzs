@@ -29,6 +29,7 @@ function Page() {
 
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,6 +43,13 @@ function Page() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true); // Disable the button
+
+
+
+
+
   
     // Validate all fields
     const newErrors: FormErrors = {};
@@ -98,30 +106,76 @@ function Page() {
           ...requestData,
           createdAt: serverTimestamp(),
         });
+        
+        
+        
+        
+        
+        // Send data to Google Sheets
+        const googleSheetData = {
+          description: formData.description,
+          image: imageURL,
+          personName: formData.personName,
+          email: formData.email,
+          phone: formData.phone,
+          size: formData.size,
+          clothSize: formData.clothSize,
+        };
 
-        toast({
-          description: "Request Submitted Succesfully ",
-        })
 
-      } catch (error) {
-        console.error("Error adding document: ", error);
-        toast({
-          description: "An unknown error occurred. Please try again later"
+  
+        const scriptURL =
+          "https://script.google.com/macros/s/AKfycbzvFFjzrBR1ZLkHi8jqAD6e1RuAszaKwBVKGP24WIRF07FuX-YHMghsRcjGCxk1iczM/exec"; // Replace with your actual Apps Script URL
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(googleSheetData),
         });
+  
+        // Handle response
+        if (response.status === 200) {
+          toast({
+            description: "Request Submitted Successfully to Google Sheets and Firestore!",
+          });
+        } else {
+          console.error("Failed to send data to Google Sheets:", response.statusText);
+        }
+  
+        // Clear the form after successful submission
+        setFormData({
+          description: "",
+          image: "",
+          personName: "",
+          email: "",
+          phone: "",
+          size: "",
+          clothSize: "",
+        });
+      } catch (error) {
+        console.error("Error during submission:", error);
+        toast({
+          description: "An error occurred. Please try again later.",
+        });
+      } finally {
+        setIsSubmitting(false); // Re-enable the button
       }
-
-      // Clear the form after successful submission
-      setFormData({
-        description: '',
-        image: '',
-        personName: '',
-        email: '',
-        phone: '',
-        size: '',
-        clothSize: '',
-      });
+    } else {
+      setIsSubmitting(false); // Re-enable the button if validation fails
     }
-  }
+  };
+
+
+
+
+
+
+
+
+
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setFormData({
       ...formData,
@@ -288,7 +342,13 @@ function Page() {
               </div>
             </div>
 
-            <Button className="mb-4 items-center justify-center" type="submit">Submit</Button>
+            <Button
+              className="mb-4 items-center justify-center"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
 
           </form>
         </div>
@@ -299,3 +359,4 @@ function Page() {
 }
 
 export default Page;
+

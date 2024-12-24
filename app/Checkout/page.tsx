@@ -27,6 +27,9 @@ function Page() {
 
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false); // Track submission state
+
+
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -72,6 +75,14 @@ function Page() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
+    if (submitting) {
+      return; // Prevent multiple submissions
+    }
+
+    setSubmitting(true); // Set submission state to true
+
+
     // Validate all fields
     const newErrors: FormErrors = {};
 
@@ -96,11 +107,12 @@ function Page() {
       newErrors.clothSize = 'Invalid size. Choose from sm, md, lg, xl, xxl.';
     }
     // Set errors or submit the form
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length === 0) {
 
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
       try {
-        // Declare requestData before using it
         const DeliveryData: DeliveryData = {
           Name: formData.personName,
           Email: formData.email,
@@ -109,42 +121,60 @@ function Page() {
           Shoe_Size: formData.size,
           Cloth_Size: formData.clothSize,
           createdAt: serverTimestamp(),
-          items: JSON.parse(searchParams.get("items") ?? "[]"),
-          totalPrice: parseFloat(searchParams.get("totalPrice") ?? "0"),
-          orderNumber: orderNumber
+          items,
+          totalPrice,
+          orderNumber,
         };
 
-        // Use the Name field as the document ID
-        await addDoc(collection(db, "Orders"), {
-          ...DeliveryData,
+        await addDoc(collection(db, "Orders"), { ...DeliveryData });
 
+        const googleSheetData = {
+          personName: formData.personName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          size: formData.size,
+          clothSize: formData.clothSize,
+          items: JSON.stringify(items),
+          totalPrice,
+          orderNumber,
+        };
+
+        const scriptURL ="https://script.google.com/macros/s/AKfycby0JS1yAxdVOV0xFP_2QgwkuSZI9oQDLvrFKo4R6ErpQtH7-VD56pIHhYYyNu8hACkr/exec";
+        await fetch(scriptURL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(googleSheetData),
         });
 
+        handleFlutterPayment({
+          callback: (response) => {
+            console.log(response);
+            closePaymentModal();
+          },
+          onClose: () => {},
+        });
+
+        setSecFormData({
+          personName: '',
+          email: '',
+          phone: '',
+          location: '',
+          size: '',
+          clothSize: '',
+        });
       } catch (error) {
-        console.error("Error adding document: ", error);
+        console.error("Error during submission:", error);
+      } finally {
+        setSubmitting(false); // Reset submission state
       }
-
-      handleFlutterPayment({
-        callback: (response) => {
-          console.log(response)
-          closePaymentModal();
-        },
-        onClose: () => { },
-      })
-
-      // Clear the form after successful submission
-      setSecFormData({
-        personName: '',
-        email: '',
-        phone: '',
-        location: '',
-        size: '',
-        clothSize: '',
-      });
-
-     
+    } else {
+      setSubmitting(false); // Reset submission state if validation fails
     }
-  }
+  };
 
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -293,9 +323,11 @@ function Page() {
             </div>
           </div>
 
-          <Button className="mb-4 items-center justify-center" type="submit">
-            Proceed With Payment
+          <Button disabled={submitting} className="mb-4 items-center justify-center" type="submit">
+            {submitting ? "Processing..." : "Proceed With Payment"}
           </Button>
+
+          
         </form>
       </div>
     </div>

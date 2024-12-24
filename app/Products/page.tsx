@@ -18,7 +18,6 @@ async function getData(skip: number) {
         _id,
         price,
         fakePrice,
-        discount,
         name,
         description,
         "slug":slug.current,
@@ -87,7 +86,7 @@ function Page() {
                           <div key={id} className="flex flex-col bg-[#f5f5f5] p-2 py-2 shadow-[rgba(0,_0,_0,0.14)_0px_2px_4px] rounded-md relative">
 
                               <div className="absolute top-1 right-1 bg-[#f97e27] text-white py-1 px-2 rounded-e-md text-xs">
-                                  {product.discount}% OFF
+                             { Math.round(((product.fakePrice - product.price) / product.fakePrice) * 100)}% OFF
                               </div>
 
                               <Link href={`/product/${product.slug}`} className="flex flex-col h-full">

@@ -6,7 +6,6 @@ export interface simplifiedProduct{
     categoryName: string;
     name: string;
     description: string;
-    discount: number;
     fakePrice: number;
     deviceType:string;
     images: any;

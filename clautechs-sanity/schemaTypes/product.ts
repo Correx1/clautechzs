@@ -30,19 +30,13 @@ export default {
     {
       name: 'price',
       title: 'Price',
-      type: 'string',
+      type: 'number',
     },
     {
       name: 'fakePrice',
       title: 'Fake Price',
-      type: 'string',
-    },
-    {
-      name: 'discount',
-      title: 'Discount',
       type: 'number',
     },
-  
     {
       name: 'category',
       title: 'Product Category',
