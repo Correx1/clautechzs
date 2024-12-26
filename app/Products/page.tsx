@@ -69,7 +69,7 @@ function Page() {
               dataLength={data.length}
               next={fetchMoreData}
               hasMore={hasMore}
-              loader={<h4 className=' text-primary italic ml-3'>Please wait...</h4>}
+              loader={<h4 className=' text-primary italic ml-3'>Loading....</h4>}
               endMessage={
                   <p style={{ textAlign: 'center' }}>
                       <b className=' text-primary italic'>Loading more...</b>
