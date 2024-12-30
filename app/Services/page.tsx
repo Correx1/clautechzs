@@ -124,8 +124,7 @@ function Page() {
 
 
   
-        const scriptURL =
-          "https://script.google.com/macros/s/AKfycbzvFFjzrBR1ZLkHi8jqAD6e1RuAszaKwBVKGP24WIRF07FuX-YHMghsRcjGCxk1iczM/exec"; // Replace with your actual Apps Script URL
+        const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL_SERVICE || ""; 
         const response = await fetch(scriptURL, {
           method: "POST",
           mode: "no-cors",

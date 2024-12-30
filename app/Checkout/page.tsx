@@ -7,13 +7,45 @@ import { db } from "@/app/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useSearchParams } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
-import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
+
 
 
 
 function Page() {
   const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false); // Track submission state
+     // State to track which account was last copied
+     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  
+    const accounts = [
+      {
+        bank: "MONIEPOINT",
+        name: "CLAUTECHZS",
+        number: process.env.NEXT_PUBLIC_MONIEPOINT_ACCOUNT || "",
+      },
+      {
+        bank: "ACCESS BANK",
+        name: "CLAUTECHZS",
+        number: process.env.NEXT_PUBLIC_ACCESSBANK_ACCOUNT || "",
+      },
+    ];
+  
+ 
+  
+    const handleCopy = (accountNumber: string, index: number) => {
+      navigator.clipboard.writeText(accountNumber);
+      setCopiedIndex(index);
+  
+      // Revert back to "Click to copy" after 3 seconds
+      setTimeout(() => setCopiedIndex(null), 3000);
+    };
+
+
+
 
 
   const [formData, setSecFormData] = useState<SecFormData>({
@@ -26,8 +58,7 @@ function Page() {
   });
 
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false); // Track submission state
+ 
 
 
   const validateEmail = (email: string): boolean => {
@@ -50,31 +81,20 @@ function Page() {
   const totalPrice = parseFloat(totalPriceString);
 
 
-  /////FLUTTER CONFIGURATION
-  const config: any = {
-    public_key: process.env.NEXT_PUBLIC_FLUTTER_KEY,
-    tx_ref: orderNumber,
-    amount: totalPrice,
-    currency: "NGN",
-    payment_options: "card,mobilemoney,ussd",
-    redirect_url: "/success",
-    customer: {
-      email: formData.email,
-      phone_number: formData.phone,
-      name: formData.personName,
-    },
-    customizations: {
-      title: "Clautechzs",
-      description: "Payment for items in cart",
-    },
-  }
-
-  const handleFlutterPayment = useFlutterwave(config);
-
-
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
+
+    
+
+
+
+
+
+
+
+    
 
     if (submitting) {
       return; // Prevent multiple submissions
@@ -140,7 +160,7 @@ function Page() {
           orderNumber,
         };
 
-        const scriptURL ="https://script.google.com/macros/s/AKfycby0JS1yAxdVOV0xFP_2QgwkuSZI9oQDLvrFKo4R6ErpQtH7-VD56pIHhYYyNu8hACkr/exec";
+        const scriptURL =process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
         await fetch(scriptURL, {
           method: "POST",
           mode: "no-cors",
@@ -150,13 +170,7 @@ function Page() {
           body: JSON.stringify(googleSheetData),
         });
 
-        handleFlutterPayment({
-          callback: (response) => {
-            console.log(response);
-            closePaymentModal();
-          },
-          onClose: () => {},
-        });
+       
 
         setSecFormData({
           personName: '',
@@ -191,6 +205,7 @@ function Page() {
       });
     }
   };
+
 
 
   return (
@@ -323,8 +338,40 @@ function Page() {
             </div>
           </div>
 
-          <Button disabled={submitting} className="mb-4 items-center justify-center" type="submit">
-            {submitting ? "Processing..." : "Proceed With Payment"}
+
+
+          <div className="banking-details block py-6">
+      <h2 className="text-gray-800 text-lg font-bold mb-4 text-left">
+        Choose Your Preferred Bank
+      </h2>
+      <ul className="space-y-4">
+        {accounts.map((account, index) => (
+          <li key={index} className="bg-slate-50 rounded-lg shadow-md p-4">
+            <p className="text-gray-800 text-base font-semibold">
+              <span className="text-gray-600 font-medium">Bank:</span> {account.bank}
+            </p>
+            <p className="text-gray-800 text-base font-semibold">
+              <span className="text-gray-600 font-medium">Account Name:</span> {account.name}
+            </p>
+            <p className="text-gray-800 text-base font-semibold flex items-center">
+              <span className="text-gray-600 font-medium">Account Number:</span>
+              <span
+                onClick={() => handleCopy(account.number, index)}
+                className={`ml-2 ${
+                  copiedIndex === index ? "text-green-500" : "text-blue-500"
+                }  hover:text-blue-700 cursor-pointer`}
+              >
+                {copiedIndex === index ? "Copied!" : "Click to copy"}
+              </span>
+            </p>
+          </li>
+        ))}
+      </ul>
+     < p className="text-gray-700 itali text-[12px] mt-1">Please confirm account name. Items will only be release after complete payment confirmation</p>
+    </div>
+
+          <Button disabled={submitting} onClick={()=>clearCart()} className="mb-4 items-center justify-center" type="submit">
+            {submitting ? "Processing..." : "Proceed only after Payment"}
           </Button>
 
           

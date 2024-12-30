@@ -26,7 +26,7 @@ const SuccessPage: React.FC = () => {
       <div className="flex items-center justify-center mb-4">
         <CheckCircle className="w-8 h-8 text-green-500 mr-2" />
        
-        <h1 className="text-xl font-bold">Thank You! Your Payment Was Successful</h1>
+        <h1 className="text-xl font-bold">Thank You!</h1>
       </div>
       <div className="bg-white p-6 rounded shadow-md">
         <h1 className="text-xl font-bold mb-4">Payment Status: {status}</h1>
