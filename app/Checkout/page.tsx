@@ -119,8 +119,8 @@ function Page() {
     if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)) {
       newErrors.size = 'Shoe size must be a number between 32 and 50';
     }
-    if (formData.clothSize.trim() !== '' && !['sm', 'md', 'lg', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
-      newErrors.clothSize = 'Invalid size. Choose from sm, md, lg, xl, xxl.';
+    if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
+      newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
     }
     // Set errors or submit the form
 
