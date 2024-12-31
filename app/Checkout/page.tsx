@@ -23,15 +23,11 @@ function Page() {
   
     const accounts = [
       {
-        bank: "MONIEPOINT",
-        name: "CLAUTECHZS",
-        number: process.env.NEXT_PUBLIC_MONIEPOINT_ACCOUNT || "",
+        bank: "ZENITH BANK",
+        name: "ANAGBOGU UCHENNA CLAUDIO",
+        number: process.env.NEXT_PUBLIC_ZENITH_ACCOUNT || "",
       },
-      {
-        bank: "ACCESS BANK",
-        name: "CLAUTECHZS",
-        number: process.env.NEXT_PUBLIC_ACCESSBANK_ACCOUNT || "",
-      },
+     
     ];
   
  
