@@ -34,7 +34,7 @@ const SearchPage: React.FC = () => {
     };
 
     return (
-        <div className=" overflow-x-hidden pt-5 ">
+        <div className=" overflow-x-hidden pt-5 mt-10">
             <Navbar/>
           <CartIcon/>
 
