@@ -21,7 +21,7 @@ const data = await getData()
 
   return (
     <div>
-      <div className="md:px-6 px-2 py-4">
+      <div className="md:px-6 px-2 py-4 mt-16">
         <div className="w-full   md:py-5 lg:p-12 md:p-6 py-3  rounded-xl
     bg-[#eceaea]  md:h-[350px] h-full flex flex-row  items-center justify-around lg:gap-x-36 ">
           <div className="w-full text-left lg:ml-16 ml-4 ">

@@ -10,7 +10,7 @@ function CartIcon() {
 
   return (
     <div>
-          <div className=" flex flex-row border-r top-14 fixed right-0 font-light  z-10">
+          <div className=" flex flex-row border-r top-14 fixed right-0 font-light  z-10 mt-3">
               <Button className=' px-3  ' onClick={() => handleCartClick()}>
                   <ShoppingBag size={20} />
                   <span >{cartCount}</span>

@@ -195,7 +195,7 @@ function Page() {
     <div className='bg-[#f8f8f8] overflow-x-hidden'>
       <Navbar/>
   <CartIcon/>
-      <div className=' overflow-x-hidden'>
+      <div className=' overflow-x-hidden mt-10'>
         <div className="w-full md:px-12 px-3 lg:py-10 py-5 bg-[#efeded]  rounded-lg">
           <div className="items-center justify-center flex  w-auto ">
             <Image src="/assets/fav.png" alt='logo' width={100} height={100} priority={true} className=' w-auto' />

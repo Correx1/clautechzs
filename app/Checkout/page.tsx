@@ -206,7 +206,7 @@ function Page() {
 
   return (
 
-    <div className='overflow-x-hidden'>
+    <div className='overflow-x-hidden mt-10'>
       <Navbar />
       <div className="w-full lg:px-12 px-4 lg:py-10 py-5 bg-[#efeded]  rounded-lg">
 

@@ -27,7 +27,7 @@ export default function Cart() {
  
   return (
     <Sheet open={shouldDisplayCart} onOpenChange={() => handleCartClick()}>
-      <SheetContent className="sm:max-w-lg w-[90vw]">
+      <SheetContent className="sm:max-w-lg w-[90vw] z-[10000] m-1">
         <SheetHeader>
           <SheetTitle className=" font-bold text-lg md:text-xl">Shopping Cart</SheetTitle>
         </SheetHeader>
