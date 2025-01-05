@@ -45,7 +45,7 @@ async function Page({
     <div className='bg-[#f8f8f8] overflow-x-hidden'>
       <Navbar/>
    <CartIcon/>
-        <div className=' bg-[#f8f8f8] overflow-x-hidden'>
+        <div className=' bg-[#f8f8f8] overflow-x-hidden mt-8'>
           <div className=' flex md:flex-row flex-col md:gap-8 gap-5 md:mx-20 px-6 md:py-10 py-3 '>
             <div className=" flex pt-8 lg:pt-1 ">
               <ImageGallery images={data.images} />
