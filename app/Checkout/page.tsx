@@ -317,7 +317,7 @@ function Page() {
 
               <div>
                 <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                  clothes(sm,md,lg,xl,xxl)
+                  clothes(s, m, l, xl, xxl.)
                 </label>
                 <input
                   className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
