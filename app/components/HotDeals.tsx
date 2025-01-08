@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { client, urlFor } from "@/app/lib/sanity";
 import Image from 'next/image';
+import Link from 'next/link';
 
 
 
@@ -32,7 +33,7 @@ async function HotDeals() {
             <p className=' text-gray-700 font-semibold text-base md:text-xl capitalize'>{data.smallText2}</p>
             <h3 className='md:text-2xl text-lg font-bold text-gray-900 capitalize'>{data.largeText2}</h3>
             <Button className='mt-2 md:mt-5 text-sm'>
-              Shop Now
+            <Link href="/Products">Shop Now </Link> 
             </Button>
           </div>
           <div className="w-full ">
@@ -46,7 +47,8 @@ async function HotDeals() {
             <p className=' text-gray-700 font-semibold text-base md:text-xl capitalize'>{data.smallText3}</p>
             <h3 className='md:text-2xl text-lg font-bold text-gray-900 capitalize'>{data.largeText3}</h3>
             <Button className='mt-2 md:mt-5 text-sm'>
-              Shop Now
+            <Link href="/Products">Shop Now </Link> 
+
             </Button>
           </div>
           <div className="w-full ">

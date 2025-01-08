@@ -3,15 +3,19 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import Navbar from '@/app/components/Navbar'
 import { SecFormData, FormErrors, DeliveryData } from '@/app/Interface';
 import { Button } from '@/components/ui/button';
-import { db } from "@/app/firebase";
+import { db, storage } from "@/app/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { v4 } from 'uuid'
 import { useSearchParams } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
+import { useToast } from '@/components/ui/use-toast';
 
 
 
 
 function Page() {
+  const { toast } = useToast()
   const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
 
@@ -30,8 +34,6 @@ function Page() {
      
     ];
   
- 
-  
     const handleCopy = (accountNumber: string, index: number) => {
       navigator.clipboard.writeText(accountNumber);
       setCopiedIndex(index);
@@ -41,9 +43,6 @@ function Page() {
     };
 
 
-
-
-
   const [formData, setSecFormData] = useState<SecFormData>({
     personName: '',
     email: '',
@@ -51,15 +50,18 @@ function Page() {
     location: '',
     size: '',
     clothSize: '',
+    image: '',
   });
-
-
- 
 
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validateFileSize = (fileSize: number): boolean => {
+    const maxSize = 4 * 1024 * 1024; // 6MB
+    return fileSize <= maxSize;
   };
 
   function generateOrderNumber(): string {
@@ -80,14 +82,6 @@ function Page() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-
-
-    
-
-
-
-
-
 
 
     
@@ -119,15 +113,29 @@ function Page() {
     if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)) {
       newErrors.size = 'Shoe size must be a number between 32 and 50';
     }
+    if (!formData.image || !formData.image.size) {
+      newErrors.image = 'Please upload your receipt';
+    } else if (!validateFileSize(formData.image.size)) {
+      newErrors.image = 'Image size must be less than 6MB';}
+
     if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
       newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
     }
+
+   
+
     // Set errors or submit the form
-
-
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+
+      let imageURL = '';
+      if (formData.image) {
+        const imageRef = ref(storage, `images/${formData.image.name + v4()}`);
+        await uploadBytes(imageRef, formData.image);
+        imageURL = await getDownloadURL(imageRef);
+      }
+      
       try {
         const DeliveryData: DeliveryData = {
           Name: formData.personName,
@@ -140,6 +148,7 @@ function Page() {
           items,
           totalPrice,
           orderNumber,
+          Image: imageURL,
         };
 
         await addDoc(collection(db, "Orders"), { ...DeliveryData });
@@ -154,6 +163,7 @@ function Page() {
           items: JSON.stringify(items),
           totalPrice,
           orderNumber,
+          image: imageURL,
         };
 
         const scriptURL =process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
@@ -168,23 +178,43 @@ function Page() {
 
        
 
-        setSecFormData({
-          personName: '',
-          email: '',
-          phone: '',
-          location: '',
-          size: '',
-          clothSize: '',
-        });
-      } catch (error) {
-        console.error("Error during submission:", error);
-      } finally {
-        setSubmitting(false); // Reset submission state
-      }
-    } else {
-      setSubmitting(false); // Reset submission state if validation fails
+      
+      // Show success toast
+      toast({
+        title: "Order Submitted Successfully",
+        description: `Your order with Order No: ${orderNumber} has been submitted.`,
+       
+        duration: 10000,
+ 
+      });
+
+      // Clear form and reset cart
+      setSecFormData({
+        personName: '',
+        email: '',
+        phone: '',
+        location: '',
+        size: '',
+        clothSize: '',
+        image: '',
+      });
+      clearCart(); // Clear the cart after submission
+    } catch (error) {
+      console.error("Error during submission:", error);
+
+      // Show error toast
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your order. Please try again.",
+        duration: 10000,
+      });
+    } finally {
+      setSubmitting(false); // Reset submission state
     }
-  };
+  } else {
+    setSubmitting(false); // Reset submission state if validation fails
+  }
+};
 
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -363,8 +393,47 @@ function Page() {
           </li>
         ))}
       </ul>
-     < p className="text-gray-700 itali text-[12px] mt-1">Please confirm account name. Items will only be release after complete payment confirmation</p>
+     < p className="text-gray-700 italic text-[12px] mt-1">Please confirm account name. Items will only be release after complete payment confirmation</p>
     </div>
+
+
+
+    <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
+              Upload payment Receipt for this purchase
+              </label>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57]
+                 border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.image && 'border-red-500'}`}
+                onChange={(e) => {
+                  const files = (e.target as HTMLInputElement).files;
+                  if (files && files.length > 0) {
+                    const file = files[0];
+                    setSecFormData({
+                      ...formData,
+                      image: file,
+                    });
+                    if (file && !validateFileSize(file.size)) {
+                      setErrors({
+                        ...errors,
+                        image: 'Image size should be less than 4MB',
+                      });
+                    } else {
+                      setErrors({
+                        ...errors,
+                        image: '',
+                      });
+                    }
+                  }
+                }}
+              />
+              {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+            </div>
+
 
           <Button disabled={submitting} onClick={()=>clearCart()} className="mb-4 items-center justify-center" type="submit">
             {submitting ? "Processing..." : "Proceed only after Payment"}
@@ -380,3 +449,10 @@ function Page() {
 }
 
 export default Page;
+
+
+
+
+
+
+

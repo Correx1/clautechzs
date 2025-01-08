@@ -37,7 +37,7 @@ function Page() {
   };
 
   const validateFileSize = (fileSize: number): boolean => {
-    const maxSize = 6 * 1024 * 1024; // 6MB
+    const maxSize = 4 * 1024 * 1024; // 6MB
     return fileSize <= maxSize;
   };
 
@@ -134,17 +134,17 @@ function Page() {
           body: JSON.stringify(googleSheetData),
         });
   
-        // Handle response
-        if (response.status === 200) {
-          toast({
-            description: "Request Submitted Successfully to Google Sheets and Firestore!",
-          });
-        } else {
-          console.error("Failed to send data to Google Sheets:", response.statusText);
-        }
+        // Show success toast
+        toast({
+          title: "Request Submitted Successfully",
+          description: `Your Request has been submitted.`,
+         
+          duration: 10000,
+   
+        });
   
-        // Clear the form after successful submission
-        setFormData({
+         // Clear the form after successful submission
+         setFormData({
           description: "",
           image: "",
           personName: "",
@@ -153,19 +153,24 @@ function Page() {
           size: "",
           clothSize: "",
         });
+  
       } catch (error) {
         console.error("Error during submission:", error);
+  
+        // Show error toast
         toast({
-          description: "An error occurred. Please try again later.",
+          title: "Submission Failed",
+          description: "There was an error submitting your request. Please try again.",
+          duration: 10000,
         });
       } finally {
-        setIsSubmitting(false); // Re-enable the button
+        setIsSubmitting(false); // Reset submission state
       }
     } else {
-      setIsSubmitting(false); // Re-enable the button if validation fails
+      setIsSubmitting(false); // Reset submission state if validation fails
     }
   };
-
+  
 
 
 
@@ -346,7 +351,7 @@ function Page() {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "Processing..." : "Submit"}
             </Button>
 
           </form>

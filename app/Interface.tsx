@@ -57,6 +57,7 @@ export interface DeliveryData {
     Shoe_Size: string;
     Cloth_Size: string;
     orderNumber: string;
+    Image: any;
 }
 export interface SecFormData {
     personName: string;
@@ -65,6 +66,7 @@ export interface SecFormData {
     location: string;
     size: string;
     clothSize: string;
+    image: any;
 }
 
 export interface FormErrors {
