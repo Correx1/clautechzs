@@ -12,6 +12,7 @@ import { v4 } from 'uuid'
 import { useToast } from "@/components/ui/use-toast"
 import CartIcon from '../components/CartIcon';
 import Navbar from '@/app/components/Navbar'
+import { useSearchParams, useRouter } from 'next/navigation';
 
 
 
@@ -30,6 +31,7 @@ function Page() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();  // Initialize useRouter
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -139,7 +141,7 @@ function Page() {
           title: "Request Submitted Successfully",
           description: `Your Request has been submitted ✅`,
          
-          duration: 10000,
+          duration: 4000,
    
         });
   
@@ -153,6 +155,12 @@ function Page() {
           size: "",
           clothSize: "",
         });
+
+           // Add a delay of 5 seconds before redirecting
+      setTimeout(() => {
+        router.push('/'); // Redirect to home page after 5 seconds
+      }, 4000); // 5000ms = 5 seconds
+
   
       } catch (error) {
         console.error("Error during submission:", error);
@@ -161,7 +169,7 @@ function Page() {
         toast({
           title: "Submission Failed",
           description: "There was an error submitting your request. Please try again.",
-          duration: 10000,
+          duration: 4000,
         });
       } finally {
         setIsSubmitting(false); // Reset submission state

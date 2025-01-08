@@ -7,9 +7,10 @@ import { db, storage } from "@/app/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 } from 'uuid'
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
 import { useToast } from '@/components/ui/use-toast';
+
 
 
 
@@ -18,6 +19,7 @@ function Page() {
   const { toast } = useToast()
   const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
+  const router = useRouter();  // Initialize useRouter
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false); // Track submission state
@@ -184,7 +186,7 @@ function Page() {
         title: "Order Submitted Successfully",
         description: `Your order has been submitted.✅`,
        
-        duration: 10000,
+        duration: 4000,
  
       });
 
@@ -198,7 +200,15 @@ function Page() {
         clothSize: '',
         image: '',
       });
+
       clearCart(); // Clear the cart after submission
+
+        // Add a delay of 5 seconds before redirecting
+      setTimeout(() => {
+        router.push('/'); // Redirect to home page after 5 seconds
+      }, 4000); // 5000ms = 5 seconds
+
+
     } catch (error) {
       console.error("Error during submission:", error);
 
@@ -206,7 +216,7 @@ function Page() {
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your order. Please try again.",
-        duration: 10000,
+        duration: 4000,
       });
     } finally {
       setSubmitting(false); // Reset submission state
