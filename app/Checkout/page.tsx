@@ -182,7 +182,7 @@ function Page() {
       // Show success toast
       toast({
         title: "Order Submitted Successfully",
-        description: `Your order with Order No: ${orderNumber} has been submitted.`,
+        description: `Your order has been submitted.✅`,
        
         duration: 10000,
  
@@ -327,17 +327,17 @@ function Page() {
 
           <div>
             <h1 className="italic mt-2 mb-1" >Only fill if its either shoes or clothes</h1>
-            <div className="mb-4 flex flex-row w-full gap-4 ">
+            <div className="mb-4 flex flex-row w-full gap-3 sm:ga">
               <div>
                 <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                  shoes (32-48)
+                (32-48)
                 </label>
                 <input
                   className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                   type="tel"
                   id="size"
                   name="size"
-                  placeholder="For shoes only"
+                  placeholder="For shoes "
                   value={formData.size}
                   onChange={handleChange}
                 />
@@ -347,14 +347,14 @@ function Page() {
 
               <div>
                 <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                  clothes(s, m, l, xl, xxl.)
+                  (s, m, l, xl, xxl.)
                 </label>
                 <input
                   className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                   type="text"
                   id="clothSize"
                   name="clothSize"
-                  placeholder="Enter size"
+                  placeholder="For clothes"
                   value={formData.clothSize}
                   onChange={handleChange}
                 />

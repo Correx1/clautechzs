@@ -137,7 +137,7 @@ function Page() {
         // Show success toast
         toast({
           title: "Request Submitted Successfully",
-          description: `Your Request has been submitted.`,
+          description: `Your Request has been submitted ✅`,
          
           duration: 10000,
    
@@ -312,14 +312,14 @@ function Page() {
               <div className="mb-4 flex flex-row w-full gap-4 ">
                 <div>
                   <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                    shoes (32-48)
+                    (32-48)
                   </label>
                   <input
                     className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                     type="tel"
                     id="size"
                     name="size"
-                    placeholder="Shoes only"
+                    placeholder="Shoes"
                     value={formData.size}
                     onChange={handleChange}
                   />
@@ -329,14 +329,14 @@ function Page() {
 
                 <div>
                   <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
-                    clothes(s, m, l, xl, xxl)
+                    (s, m, l, xl, xxl)
                   </label>
                   <input
                     className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                     type="text"
                     id="clothSize"
                     name="clothSize"
-                    placeholder="Clothes only"
+                    placeholder="Clothes"
                     value={formData.clothSize}
                     onChange={handleChange}
                   />
