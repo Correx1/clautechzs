@@ -3,13 +3,12 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import Navbar from '@/app/components/Navbar'
 import { SecFormData, FormErrors, DeliveryData } from '@/app/Interface';
 import { Button } from '@/components/ui/button';
-import { db, storage } from "@/app/firebase";
+import { db } from "@/app/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { v4 } from 'uuid'
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
 import { useToast } from '@/components/ui/use-toast';
+import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 
 
 
@@ -19,31 +18,8 @@ function Page() {
   const { toast } = useToast()
   const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
-  const router = useRouter();  // Initialize useRouter
-
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false); // Track submission state
-     // State to track which account was last copied
-     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  
-    const accounts = [
-      {
-        bank: "ZENITH BANK",
-        name: "ANAGBOGU UCHENNA CLAUDIO",
-        number: process.env.NEXT_PUBLIC_ZENITH_ACCOUNT || "",
-      },
-     
-    ];
-  
-    const handleCopy = (accountNumber: string, index: number) => {
-      navigator.clipboard.writeText(accountNumber);
-      setCopiedIndex(index);
-  
-      // Revert back to "Click to copy" after 3 seconds
-      setTimeout(() => setCopiedIndex(null), 3000);
-    };
-
 
   const [formData, setSecFormData] = useState<SecFormData>({
     personName: '',
@@ -52,7 +28,6 @@ function Page() {
     location: '',
     size: '',
     clothSize: '',
-    image: '',
   });
 
 
@@ -61,32 +36,40 @@ function Page() {
     return emailRegex.test(email);
   };
 
-  const validateFileSize = (fileSize: number): boolean => {
-    const maxSize = 4 * 1024 * 1024; // 6MB
-    return fileSize <= maxSize;
-  };
-
   function generateOrderNumber(): string {
     // Generate a random 5-digit number
     let randomNum = Math.floor(10000 + Math.random() * 90000);
     return "CL." + randomNum;
   }
   const orderNumber = generateOrderNumber();
-
   const itemsString = searchParams.get("items") ?? "[]";
   const totalPriceString = searchParams.get("totalPrice") ?? "0";
-
   // Parse the items string into an array of items
   const items = JSON.parse(itemsString) as { name: string; quantity: number }[];
   const totalPrice = parseFloat(totalPriceString);
 
+  const config: any = {
+    public_key: process.env.NEXT_PUBLIC_FLUTTER,
+    tx_ref: orderNumber,
+    amount: totalPrice,
+    currency: "NGN",
+    payment_options: "card,mobilemoney,ussd",
+    redirect_url: "/success",
+    customer: {
+      email: formData.email,
+      phone_number: formData.phone,
+      name: formData.personName,
+    },
+    customizations: {
+      title: "Clautechzs",
+      description: "Payment for items in cart",
+    },
+  };
 
+  const handleFlutterPayment = useFlutterwave(config);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-
-
-    
 
     if (submitting) {
       return; // Prevent multiple submissions
@@ -115,10 +98,6 @@ function Page() {
     if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)) {
       newErrors.size = 'Shoe size must be a number between 32 and 50';
     }
-    if (!formData.image || !formData.image.size) {
-      newErrors.image = 'Please upload your receipt';
-    } else if (!validateFileSize(formData.image.size)) {
-      newErrors.image = 'Image size must be less than 6MB';}
 
     if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
       newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
@@ -130,14 +109,6 @@ function Page() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-
-      let imageURL = '';
-      if (formData.image) {
-        const imageRef = ref(storage, `images/${formData.image.name + v4()}`);
-        await uploadBytes(imageRef, formData.image);
-        imageURL = await getDownloadURL(imageRef);
-      }
-      
       try {
         const DeliveryData: DeliveryData = {
           Name: formData.personName,
@@ -150,7 +121,7 @@ function Page() {
           items,
           totalPrice,
           orderNumber,
-          Image: imageURL,
+        
         };
 
         await addDoc(collection(db, "Orders"), { ...DeliveryData });
@@ -165,7 +136,7 @@ function Page() {
           items: JSON.stringify(items),
           totalPrice,
           orderNumber,
-          image: imageURL,
+         
         };
 
         const scriptURL =process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
@@ -178,15 +149,21 @@ function Page() {
           body: JSON.stringify(googleSheetData),
         });
 
-       
+        handleFlutterPayment({
+          callback: (response) => {
+            console.log(response);
+            closePaymentModal();
+          },
+          onClose: () => {},
+        });
+  
 
       
       // Show success toast
       toast({
         title: "Order Submitted Successfully",
         description: `Your order has been submitted.✅`,
-       
-        duration: 4000,
+        duration: 3000,
  
       });
 
@@ -198,15 +175,11 @@ function Page() {
         location: '',
         size: '',
         clothSize: '',
-        image: '',
+     
       });
 
-      clearCart(); // Clear the cart after submission
+     // clearCart(); // Clear the cart after submission
 
-        // Add a delay of 5 seconds before redirecting
-      setTimeout(() => {
-        router.push('/'); // Redirect to home page after 5 seconds
-      }, 4000); // 5000ms = 5 seconds
 
 
     } catch (error) {
@@ -216,7 +189,7 @@ function Page() {
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your order. Please try again.",
-        duration: 4000,
+        duration: 3000,
       });
     } finally {
       setSubmitting(false); // Reset submission state
@@ -266,7 +239,7 @@ function Page() {
               </li>
             ))}
           </ul>
-          <p className='py-2 text-lg text-gray-800 font-bold'>Total price: ₦{totalPrice}</p>
+          <p className='py-2 text-lg text-gray-800 font-bold'>Total price: ₦{totalPrice.toFixed(2)}</p>
         </div>
 
         <form className="" onSubmit={handleSubmit}>
@@ -375,78 +348,8 @@ function Page() {
           </div>
 
 
-
-          <div className="banking-details block py-6">
-      <h2 className="text-gray-800 text-lg font-bold mb-4 text-left">
-        Choose Your Preferred Bank
-      </h2>
-      <ul className="space-y-4">
-        {accounts.map((account, index) => (
-          <li key={index} className="bg-slate-50 rounded-lg shadow-md p-4">
-            <p className="text-gray-800 text-base font-semibold">
-              <span className="text-gray-600 font-medium">Bank:</span> {account.bank}
-            </p>
-            <p className="text-gray-800 text-base font-semibold">
-              <span className="text-gray-600 font-medium">Account Name:</span> {account.name}
-            </p>
-            <p className="text-gray-800 text-base font-semibold flex items-center">
-              <span className="text-gray-600 font-medium">Account Number:</span>
-              <span
-                onClick={() => handleCopy(account.number, index)}
-                className={`ml-2 ${
-                  copiedIndex === index ? "text-green-500" : "text-blue-500"
-                }  hover:text-blue-700 cursor-pointer`}
-              >
-                {copiedIndex === index ? "Copied!" : "Click to copy"}
-              </span>
-            </p>
-          </li>
-        ))}
-      </ul>
-     < p className="text-gray-700 italic text-[12px] mt-1">Please confirm account name. Items will only be release after complete payment confirmation</p>
-    </div>
-
-
-
-    <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
-              Upload payment Receipt for this purchase
-              </label>
-              <input
-                type="file"
-                id="image"
-                name="image"
-                accept="image/*"
-                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57]
-                 border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.image && 'border-red-500'}`}
-                onChange={(e) => {
-                  const files = (e.target as HTMLInputElement).files;
-                  if (files && files.length > 0) {
-                    const file = files[0];
-                    setSecFormData({
-                      ...formData,
-                      image: file,
-                    });
-                    if (file && !validateFileSize(file.size)) {
-                      setErrors({
-                        ...errors,
-                        image: 'Image size should be less than 4MB',
-                      });
-                    } else {
-                      setErrors({
-                        ...errors,
-                        image: '',
-                      });
-                    }
-                  }
-                }}
-              />
-              {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
-            </div>
-
-
-          <Button disabled={submitting} onClick={()=>clearCart()} className="mb-4 items-center justify-center" type="submit">
-            {submitting ? "Processing..." : "Proceed only after Payment"}
+          <Button disabled={submitting} className="mb-4 items-center justify-center" type="submit">
+            {submitting ? "Processing..." : "Proceed with Payment"}
           </Button>
 
           
