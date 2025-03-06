@@ -61,64 +61,66 @@ function CheckoutPage() {
       newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length !== 0) {
-      setSubmitting(false);
-      return;
-    }
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        const customerData = {
+          personName: formData.personName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          size: formData.size,
+          clothSize: formData.clothSize,
+          items: JSON.stringify(items),
+          totalPrice,
+          orderNumber,
+        };
 
-    // Create customer data for meta
-    const customerData = {
-      personName: formData.personName,
-      email: formData.email,
-      phone: formData.phone,
-      location: formData.location,
-      size: formData.size,
-      clothSize: formData.clothSize,
-      items: JSON.stringify(items),
-    };
+        // Store pending order in localStorage
+        const pendingOrders = JSON.parse(localStorage.getItem('pendingOrders') || '{}');
+        pendingOrders[orderNumber] = customerData;
+        localStorage.setItem('pendingOrders', JSON.stringify(pendingOrders));
 
-    // Configure Flutterwave payment
-    const config: any = {
-      public_key: process.env.NEXT_PUBLIC_FLUTTER,
-      tx_ref: orderNumber,
-      amount: totalPrice,
-      currency: "NGN",
-      payment_options: "card,mobilemoney,ussd",
-      // Redirect URL points to a simplified success page
-      redirect_url: "/success",
-      customer: {
-        email: formData.email,
-        phone_number: formData.phone,
-        name: formData.personName,
-      },
-      meta: {
-        ...customerData
-      },
-      customizations: {
-        title: "Clautechzs",
-        description: "Payment for items in cart",
-      },
-    };
+        // Update Flutterwave config
+        const config = {
+          public_key: process.env.NEXT_PUBLIC_FLUTTER!,
+          tx_ref: orderNumber,
+          amount: totalPrice,
+          currency: "NGN",
+          payment_options: "card,mobilemoney,ussd",
+          redirect_url: `${window.location.origin}/success?order_id=${orderNumber}`,
+          customer: {
+            email: formData.email,
+            phone_number: formData.phone,
+            name: formData.personName,
+          },
+          meta: {
+            ...customerData,
+            orderNumber, // Ensure orderNumber is in meta
+            _isWebhook: true // Flag for webhook
+          },
+          customizations: {
+            title: "Clautechzs",
+            description: "Payment for items in cart",
+            logo:""
+          },
+        };
 
-    try {
-      const handleFlutterPayment = useFlutterwave(config);
-      handleFlutterPayment({
-        callback: (response) => {
-          console.log("Flutterwave response:", response);
-          closePaymentModal();
-          setSubmitting(false);
-        },
-        onClose: () => {
-          setSubmitting(false);
-        },
-      });
-    } catch (error) {
-      console.error("Error during submission:", error);
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your order. Please try again.",
-        duration: 3000,
-      });
+        const handleFlutterPayment = useFlutterwave(config);
+        handleFlutterPayment({
+          callback: (response) => {
+            console.log('Payment callback:', response);
+            closePaymentModal();
+          },
+          onClose: () => {
+            setSubmitting(false);
+          },
+        });
+      } catch (error) {
+        console.error("Submission error:", error);
+        toast({ title: "Error", description: "Failed to initiate payment" });
+        setSubmitting(false);
+      }
+    } else {
       setSubmitting(false);
     }
   };
@@ -285,3 +287,17 @@ function CheckoutPage() {
 }
 
 export default CheckoutPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

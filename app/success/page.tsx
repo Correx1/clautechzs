@@ -1,54 +1,83 @@
 "use client";
-
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useShoppingCart } from "use-shopping-cart";
 import Link from 'next/link';
 
-const SuccessPage: React.FC = () => {
+export default function SuccessPage() {
+  const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
-  const status = searchParams.get('status');
-  const tx_ref = searchParams.get('tx_ref');
-  const transaction_id = searchParams.get('transaction_id');
+  const orderId = searchParams.get('order_id');
+  const [status, setStatus] = useState<'processing' | 'success' | 'failed'>('processing');
+
+  useEffect(() => {
+    const verifyOrder = async () => {
+      try {
+        // Clear cart first
+        clearCart();
+
+        // Check localStorage for pending order
+        const pendingOrders = JSON.parse(localStorage.getItem('pendingOrders') || '{}');
+        if (orderId && pendingOrders[orderId]) {
+          // If order exists in pending, check webhook status
+          const response = await fetch(`/api/verify?order_id=${orderId}`);
+          const data = await response.json();
+          
+          if (data.verified) {
+            setStatus('success');
+            delete pendingOrders[orderId];
+            localStorage.setItem('pendingOrders', JSON.stringify(pendingOrders));
+          } else {
+            setStatus('failed');
+          }
+        } else {
+          setStatus('success');
+        }
+      } catch (error) {
+        console.error('Verification error:', error);
+        setStatus('failed');
+      }
+    };
+
+    verifyOrder();
+  }, [orderId, clearCart]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      {status === 'successful' ? (
-        <>
-          <div className="flex items-center justify-center mb-4">
-            <CheckCircle className="w-8 h-8 text-green-500 mr-2" />
-            <h1 className="text-xl font-bold">Thank You!</h1>
-          </div>
-          <div className="bg-white p-6 rounded shadow-md text-center">
-            <h1 className="text-xl font-bold mb-4">Payment Successful</h1>
-            <p className="mb-2 text-lg font-bold">Order No: {tx_ref}</p>
-            <p className="mb-2 text-lg font-bold">Transaction ID: {transaction_id}</p>
-            <p className="text-sm text-gray-700 mb-4">
-              Your payment has been received and your order is being processed.
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+        {status === 'success' ? (
+          <>
+            <div className="flex items-center justify-center mb-4 text-green-600">
+              <CheckCircle className="h-8 w-8 mr-2" />
+              <h1 className="text-2xl font-bold">Payment Successful!</h1>
+            </div>
+            <p className="text-center mb-4">
+              Order ID: <span className="font-mono">{orderId}</span>
             </p>
-            <Button className="mt-2">
-              <Link href="/">Return to Homepage</Link>
-            </Button>
+          </>
+        ) : status === 'failed' ? (
+          <>
+            <div className="flex items-center justify-center mb-4 text-red-600">
+              <XCircle className="h-8 w-8 mr-2" />
+              <h1 className="text-2xl font-bold">Payment Failed</h1>
+            </div>
+            <p className="text-center mb-4">
+              Please contact support with Order ID: {orderId}
+            </p>
+          </>
+        ) : (
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Verifying payment...</p>
           </div>
-        </>
-      ) : (
-        <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center justify-center mb-4">
-            <XCircle className="w-8 h-8 text-red-500 mr-2" />
-            <h1 className="text-xl font-bold">Payment Failed</h1>
-          </div>
-          <div className="bg-white p-6 rounded shadow-md text-center">
-            <p className="mb-4">Failed to process your order. Please contact support with your transaction ID.</p>
-            <p className="mb-2 text-gray-700">Transaction ID: {transaction_id || 'Not available'}</p>
-            <Button className="mt-2">
-              <Link href="/">Return to Homepage</Link>
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
+
+        <Button asChild className="w-full mt-6">
+          <Link href="/">Return to Home</Link>
+        </Button>
+      </div>
     </div>
   );
-};
-
-export default SuccessPage;
+}
