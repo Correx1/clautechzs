@@ -57,6 +57,7 @@ export interface DeliveryData {
     Shoe_Size: string;
     Cloth_Size: string;
     orderNumber: string;
+  
 
 }
 export interface SecFormData {

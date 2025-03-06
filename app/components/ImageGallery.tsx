@@ -18,7 +18,7 @@ export default function ImageGallery({ images }: iAppProps) {
       <div className="flex flex-col overflow-x-hidden">
          
           <div>
-              <div className="relative overflow-x-hidden p-3 items-center justify-center  shadow-[rgba(0,_0,_0,0.24)_0px_3px_6px] rounded-lg bg-[#f3f3f3]">
+              <div className="relative overflow-x-hidden p-6 items-center justify-center  shadow-sm  rounded-md bg-[#f3f3f3]">
                   <Image
                       src={urlFor(bigImage).url()}
                       alt="Big Photo"

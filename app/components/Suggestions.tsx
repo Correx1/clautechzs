@@ -1,48 +1,80 @@
 import React from 'react';
-import { simplifiedProduct } from '../Interface';
-import { client } from "@/app/lib/sanity";
+import { simplifiedProduct } from '@/app/Interface';
+import { client } from '@/app/lib/sanity';
 import CarouselComponent from './Carousel';
 import Link from 'next/link';
 import Image from 'next/image';
 
+interface SuggestionsProps {
+  categoryName: string;
+  currentId?: string;
+}
 
-const Suggestions = async () => {
-  const getData = async () => {
-    const query = `*[_type =="product"]|order(_createdAt desc){
-        _id, 
-        price,
-         fakePrice,
-        name,
-        "slug":slug.current,
-        "categoryName":category->name,
-        "imageUrl":images[0].asset->url
-    }`
+const transactionFeeRate = 0.0147; // 1.47%
+const vatRate = 0.075; // 7.5%
 
-    return await client.fetch(query);
-  };
+// Helper function to update the product's price based on the revised VAT logic.
+function applyVatLogic(product: any) {
+  const originalPrice = product.price ?? 0;
+  const transactionFee = originalPrice * transactionFeeRate;
+  const vatOnFee = transactionFee * vatRate;
+  const vatTotal = transactionFee + vatOnFee;
+  const grandPrice = originalPrice + vatTotal;
+  return { ...product, price: grandPrice };
+}
 
-  const data: simplifiedProduct[] = await getData();
+
+const Suggestions = async ({ categoryName, currentId }: SuggestionsProps) => {
+  const query = `*[_type == "product" && category->name == "${categoryName}" ${
+    currentId ? `&& _id != "${currentId}"` : ''
+  }]|order(_createdAt desc){
+    _id, 
+    price,
+    fakePrice,
+    name,
+    "slug": slug.current,
+    "categoryName": category->name,
+    "imageUrl": images[0].asset->url
+  }`;
+
+  const data: simplifiedProduct[] = await client.fetch(query);
+  // Update each product's price with VAT logic
+  const updatedData = data.map(product => applyVatLogic(product));
 
   return (
-    <div className=" overflow-x-hidden pb-10">
-      <h2 className='font-bold uppercase text-gray-700 lg:text-3xl text-xl lg:py-10 py-6 px-6 lg:px-4 pt-20'>You may also like</h2>
+    <div className="overflow-x-hidden pb-6">
+      <h2 className="font-bold uppercase text-gray-700 text-base sm:text-lg py-5 px-6 pt-6">
+        You may also like
+      </h2>
       <CarouselComponent>
-        {data.map((product, _id) => (
-          <div className="embla__slide md:basis-1/2 lg:basis-1/6 flex flex-row" key={_id}>
+        {updatedData.map((product) => (
+          <div
+            className="embla__slide md:basis-1/2 lg:basis-1/6 flex flex-row"
+            key={product._id}
+          >
             <Link href={`/product/${product.slug}`}>
-              <div className='mx-2 h-[250px] w-[230px] p-5 bg-[#f5f5f5] shadow-[rgba(0,_0,_0,0.14)_0px_3px_8px] rounded-lg relative overflow-hidden'>
-                <div className="absolute top-0 right-2  bg-[#f97e27] text-white py-1 px-2 text-xs rounded-e-md">
-                { Math.round(((product.fakePrice - product.price) / product.fakePrice) * 100)}% OFF
+              <div className="mx-2 h-[220px] w-[210px] p-5 bg-white shadow-md rounded-xl relative overflow-hidden">
+                <div className="absolute top-0 right-2 bg-[#f97e27] text-white py-1 px-2 text-xs rounded-md">
+                  {Math.round(
+                    ((product.fakePrice - product.price) / product.fakePrice) * 100
+                  )}
+                  % OFF
                 </div>
-                <Image src={product.imageUrl} alt={product.name}
-                  className="w-full h-36 object-cover"
-                  width={200}
-                  height={200}/>
-                <div className="text p-4 flex-1 text-center">
-                  <p className='font-bold truncate text-base'>{product.name}</p>
-                  <span className='font-bold text-gray-700 text-sm'>₦{product.price}</span>
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-32 object-cover rounded-xl"
+                  width={220}
+                  height={130}
+                />
+                <div className="p-3 text-center">
+                  <p className="font-medium text-gray-800 text-sm sm:text-base truncate">
+                    {product.name}
+                  </p>
+                  <span className="font-semibold text-gray-700 text-sm sm:text-base">
+                    ₦{product.price.toFixed(2)}
+                  </span>
                 </div>
-               
               </div>
             </Link>
           </div>

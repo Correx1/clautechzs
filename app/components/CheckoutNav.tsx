@@ -71,8 +71,7 @@ export default function BottomNavbar() {
         )
       })}
 
-      {/* Cart Icon Button */}
-      <CartIcon />
+  
     </nav>
   )
 }

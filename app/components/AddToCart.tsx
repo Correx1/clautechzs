@@ -28,7 +28,7 @@ const AddToCart = ({ currency, name, price, image, id
     return (
         <Button
             onClick={() => { addItem(product), handleCartClick() }}
-            className="mt-auto mx-5">Add to Cart</Button>
+            className="mt-auto text-xs px-2 py-1">Add to Cart</Button>
     )
 }
 

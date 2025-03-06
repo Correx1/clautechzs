@@ -1,32 +1,39 @@
-import { Search } from 'lucide-react';
-import React from 'react';
+"use client"
 
-const SearchInput: React.FC<{ onSearch: (query: string) => void }> = ({ onSearch }) => {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        onSearch(e.target.value);
-    };
+import React, { useState } from "react"
+import { Search } from "lucide-react"
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        // You can add search logic here if needed
-    };
+interface SearchBarProps {
+  onSearch: (query: string) => void
+  placeholder?: string
+}
 
-    return (
-        <form onSubmit={handleSubmit} className=" flex flex-row items-center justify-center my-6 ">
-            <input
-                type="text"
-                placeholder="Search..."
-                onChange={handleChange}
-                className="bg-gray-100 border border-[#f97e27] rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#f97e27] focus:border-transparent"
-            />
-            <button
-                type="submit"
-                className="  px-3 py-2 bg-[#f97e27] text-white font-bold rounded-r-md"
-            >
-                <Search/>
-            </button>
-        </form>
-    );
-};
+const SearchBar: React.FC<SearchBarProps> = ({
+  onSearch,
+  placeholder = "Search products..."
+}) => {
+  const [query, setQuery] = useState("")
 
-export default SearchInput;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setQuery(value)
+    onSearch(value) // live search on each keystroke
+  }
+
+  return (
+    <div className="w-full px-4 py-3 bg-gray-100 shadow ">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600" size={20} />
+        <input
+          type="text"
+          value={query}
+          onChange={handleChange}
+          placeholder={placeholder}
+          className="w-full rounded-full border-2 border-gray-400  pl-12 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#f97e27] focus:border-transparent"
+        />
+      </div>
+    </div>
+  )
+}
+
+export default SearchBar

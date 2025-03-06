@@ -10,7 +10,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 } from 'uuid'
 import { useToast } from "@/components/ui/use-toast"
-import CartIcon from '../components/CartIcon';
+
 import Navbar from '@/app/components/Navbar'
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -205,23 +205,23 @@ function Page() {
 
 
   return (
-    <div className='bg-[#f8f8f8] overflow-x-hidden'>
+    <div className='bg-gray-100 overflow-x-hidden font-manrope'>
       <Navbar/>
-  <CartIcon/>
-      <div className=' overflow-x-hidden mt-10'>
-        <div className="w-full md:px-12 px-3 lg:py-10 py-5 bg-[#efeded]  rounded-lg">
+ 
+      <div className=' overflow-x-hidden'>
+        <div className="w-full md:px-12 px-3 lg:py-6 py-4 bg-gray-100  rounded-lg">
           <div className="items-center justify-center flex  w-auto ">
             <Image src="/assets/fav.png" alt='logo' width={100} height={100} priority={true} className=' w-auto' />
           </div>
-          <h2 className="text-base lg:text-xl uppercase text-gray-700 font-bold text-center pb-4">Make a request for a specific item or service</h2>
+           <h2 className="text-sm sm:text-base  text-gray-700 font-normal text-center pb-4 italic">We offer phone and laptop repair, custom uniform styling, and special item requests.</h2>
 
           <form className="" onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="description">
+              <label className="block text-gray-700 text-sm sm:text-base font-bold mb-2" htmlFor="description">
                 Description
               </label>
               <textarea
-                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.description && 'border-red-500'}`}
+                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.description && 'border-red-500'}`}
                 id="description"
                 name="description"
                 placeholder="Describe what you need"
@@ -232,7 +232,7 @@ function Page() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="image">
+              <label className="block text-gray-700 text-sm sm:text-base  font-bold mb-2" htmlFor="image">
                 Image Upload
               </label>
               <input
@@ -240,7 +240,7 @@ function Page() {
                 id="image"
                 name="image"
                 accept="image/*"
-                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57]
+                className={`border resize-none rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57]
                  border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.image && 'border-red-500'}`}
                 onChange={(e) => {
                   const files = (e.target as HTMLInputElement).files;
@@ -268,11 +268,11 @@ function Page() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="personName">
+              <label className="block text-gray-700 text-sm sm:text-base  font-bold mb-2" htmlFor="personName">
                 Name
               </label>
               <input
-                className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.personName && 'border-red-500'}`}
+                className={`border rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.personName && 'border-red-500'}`}
                 type="text"
                 id="personName"
                 name="personName"
@@ -284,11 +284,11 @@ function Page() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="email">
+              <label className="block text-gray-700 text-sm sm:text-base font-bold mb-2" htmlFor="email">
                 Email
               </label>
               <input
-                className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.email && 'border-red-500'}`}
+                className={`border rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.email && 'border-red-500'}`}
                 type="email"
                 id="email"
                 name="email"
@@ -300,11 +300,11 @@ function Page() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="phone">
+              <label className="block text-gray-700 text-sm sm:text-base  font-bold mb-2" htmlFor="phone">
                 Contact
               </label>
               <input
-                className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.phone && 'border-red-500'}`}
+                className={`border rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.phone && 'border-red-500'}`}
                 type="number"
                 id="phone"
                 name="phone"
@@ -316,14 +316,14 @@ function Page() {
             </div>
 
             <div>
-              <h1 className="italic mt-3 mb-1" >Only fill if its either shoes or clothes</h1>
+              <h1 className="italic mt-3 mb-1 text-sm sm:text-base " >Only fill if its either shoes or clothes</h1>
               <div className="mb-4 flex flex-row w-full gap-4 ">
                 <div>
-                  <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
+                  <label className="block text-gray-700 text-sm sm:text-base  font-bold mb-2" htmlFor="size">
                     (32-48)
                   </label>
                   <input
-                    className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
+                    className={`border rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                     type="tel"
                     id="size"
                     name="size"
@@ -336,11 +336,11 @@ function Page() {
 
 
                 <div>
-                  <label className="block text-gray-700 text-base font-bold mb-2" htmlFor="size">
+                  <label className="block text-gray-700 text-sm sm:text-base  font-bold mb-2" htmlFor="size">
                     (s, m, l, xl, xxl)
                   </label>
                   <input
-                    className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
+                    className={`border rounded w-full py-3 px-3 text-gray-800 text-sm sm:text-base  placeholder:text-gray-400 outline-[#f99b57] border-none bg-[#fff] shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
                     type="text"
                     id="clothSize"
                     name="clothSize"
