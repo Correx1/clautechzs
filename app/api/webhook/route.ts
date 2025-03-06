@@ -1,19 +1,21 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+export async function POST(request: Request) {
+  // Ensure method is POST (this check is optional because this handler only runs for POST)
+  if (request.method !== 'POST') {
+    return NextResponse.json({ message: 'Method not allowed' }, { status: 405 });
   }
 
   const secretHash = process.env.FLW_WEBHOOK_HASH;
-  const signature = req.headers['verif-hash'];
+  const signature = request.headers.get('verif-hash');
   
   if (!signature || signature !== secretHash) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const payload = req.body;
+  // In the App Router, use await request.json() to parse the request body
+  const payload = await request.json();
   
   try {
     // Verify transaction with Flutterwave
@@ -23,14 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
       },
     });
-
     const transaction = response.data.data;
     
-    // Check if transaction was successful
     if (transaction.status === 'successful' && transaction.amount === payload.data.amount) {
       const meta = transaction.meta;
-      
-      // Prepare order data
       const orderData = {
         personName: meta.personName,
         email: meta.email,
@@ -54,21 +52,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body: JSON.stringify(orderData),
       });
 
-      // Firebase submission (commented out)
-      // const DeliveryData = { ...orderData, createdAt: serverTimestamp() };
-      // await addDoc(collection(db, "Orders"), DeliveryData);
+      // Note: localStorage is not available on the server.
+      // If you need to manage pending orders, consider using a server-side store.
 
-      // Remove from pending orders
-      const pendingOrders = JSON.parse(meta._pendingOrders || '{}');
-      delete pendingOrders[meta.orderNumber];
-      localStorage.setItem('pendingOrders', JSON.stringify(pendingOrders));
-
-      return res.status(200).json({ success: true });
+      return NextResponse.json({ success: true });
     }
     
-    return res.status(400).json({ message: 'Transaction verification failed' });
-  } catch (error) {
+    return NextResponse.json({ message: 'Transaction verification failed' }, { status: 400 });
+  } catch (error: any) {
     console.error('Webhook error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
