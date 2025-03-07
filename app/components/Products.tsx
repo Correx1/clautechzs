@@ -12,6 +12,7 @@ import SearchBar from '@/app/components/Search';
 import { CheckCircle } from 'lucide-react';
 import FloatingWhatsappButton from "@/app/components/Whatsapp";
 
+// Category filters
 const categories = [
   { label: 'All', value: undefined },
   { label: 'Devices and Accessories', value: 'Devices and Accessories' },
@@ -20,8 +21,8 @@ const categories = [
   { label: 'Electronic Gadgets', value: 'Electronic Gadgets' },
 ];
 
+// Shuffle logic
 function stratifiedShuffle<T extends { _id: string; categoryName: string }>(array: T[]): T[] {
-  // Group items by categoryName
   const groups: { [category: string]: T[] } = {};
   for (const item of array) {
     if (!groups[item.categoryName]) {
@@ -29,8 +30,7 @@ function stratifiedShuffle<T extends { _id: string; categoryName: string }>(arra
     }
     groups[item.categoryName].push(item);
   }
-  
-  // Shuffle each group individually with Fisher–Yates
+
   for (const category in groups) {
     let currentIndex = groups[category].length, randomIndex;
     while (currentIndex !== 0) {
@@ -42,8 +42,7 @@ function stratifiedShuffle<T extends { _id: string; categoryName: string }>(arra
       ];
     }
   }
-  
-  // Interleave the items from each group
+
   const result: T[] = [];
   let itemsLeft = true;
   while (itemsLeft) {
@@ -58,10 +57,9 @@ function stratifiedShuffle<T extends { _id: string; categoryName: string }>(arra
   return result;
 }
 
+// VAT logic
 const transactionFeeRate = 0.0147; // 1.47%
 const vatRate = 0.075; // 7.5%
-
-// Helper function to update the product's price based on the revised VAT logic.
 function applyVatLogic(product: any) {
   const originalPrice = product.price ?? 0;
   const transactionFee = originalPrice * transactionFeeRate;
@@ -71,7 +69,7 @@ function applyVatLogic(product: any) {
   return { ...product, price: grandPrice };
 }
 
-
+// Fetch data from Sanity
 async function getData(skip: number, category?: string): Promise<simplifiedProduct[]> {
   const filterCategory = category ? `&& category->name == "${category}"` : '';
   const query = `*[_type == "product" ${filterCategory}]|order(_createdAt asc){
@@ -84,13 +82,11 @@ async function getData(skip: number, category?: string): Promise<simplifiedProdu
     "categoryName": category->name,
     "imageUrl": images[0].asset->url
   }[${skip}...${skip + 10}]`;
-  
+
   try {
     const data = await client.fetch(query);
     if (!data || !Array.isArray(data)) return [];
-    // Filter out items missing critical fields (like _id)
     const validData = data.filter((item: any) => item._id);
-    // Update each product's price to the grandPrice using the VAT logic
     const updatedData = validData.map(applyVatLogic);
     return stratifiedShuffle(updatedData);
   } catch (error) {
@@ -99,6 +95,7 @@ async function getData(skip: number, category?: string): Promise<simplifiedProdu
   }
 }
 
+// Search logic
 async function searchData(searchQuery: string): Promise<simplifiedProduct[]> {
   const query = `*[_type == "product" && name match "*${searchQuery}*"]|order(_createdAt asc){
     _id,
@@ -115,7 +112,6 @@ async function searchData(searchQuery: string): Promise<simplifiedProduct[]> {
     const data = await client.fetch(query);
     if (!data || !Array.isArray(data)) return [];
     const validData = data.filter((item: any) => item._id);
-    // Update each product's price using the VAT logic
     const updatedData = validData.map(applyVatLogic);
     return stratifiedShuffle(updatedData);
   } catch (error) {
@@ -134,7 +130,7 @@ function Page() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Load default data only when not searching.
+  // 1) Load initial data (only if not searching).
   useEffect(() => {
     if (searchQuery.trim()) return;
     const fetchData = async () => {
@@ -143,8 +139,6 @@ function Page() {
         setHasMore(false);
         return;
       }
-      
-      // Ensure we don't add duplicate products when adding new data
       setData((prevData) => {
         const existingIds = new Set(prevData.map(item => item._id));
         const uniqueNewData = newData.filter(item => !existingIds.has(item._id));
@@ -154,11 +148,32 @@ function Page() {
     fetchData();
   }, [skip, selectedCategory, searchQuery]);
 
+  // 2) Auto-fetch more if the page content is too short to scroll.
+  useEffect(() => {
+    const checkHeightAndFetch = () => {
+      // Compare total page height to the viewport height
+      const bodyHeight = document.body.scrollHeight;
+      const windowHeight = window.innerHeight;
+
+      // If there's no scrolling and we still have more items, fetch more
+      if (bodyHeight <= windowHeight && hasMore) {
+        fetchMoreData();
+      }
+    };
+
+    checkHeightAndFetch(); // run once when data updates
+    window.addEventListener('resize', checkHeightAndFetch);
+    return () => {
+      window.removeEventListener('resize', checkHeightAndFetch);
+    };
+  }, [data, hasMore]);
+
+  // 3) Infinite Scroll callback
   const fetchMoreData = () => {
     setSkip((prev) => prev + 10);
   };
 
-  // Live search: query Sanity directly.
+  // 4) Handle search queries
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
@@ -169,10 +184,10 @@ function Page() {
     }
   };
 
-  // Determine which dataset to display
+  // 5) Determine displayed data
   const displayedData = searchQuery.trim() ? searchResults : data;
 
-  // Update data when category is changed
+  // 6) Handle category selection
   const handleCategoryClick = (category: string | undefined) => {
     setSelectedCategory(category);
     setData([]);
@@ -180,16 +195,15 @@ function Page() {
     setHasMore(true);
   };
 
-  // Helper to render a product card with fallbacks for missing data
+  // 7) Render product card
   const renderProductCard = (product: simplifiedProduct, index: number) => {
     const discount =
       product.fakePrice && product.price
         ? Math.round(((product.fakePrice - product.price) / product.fakePrice) * 100)
         : null;
-    
-    // Create a truly unique key using both the _id and the index
+
     const uniqueKey = `${product._id}-${index}`;
-    
+
     return (
       <div key={uniqueKey} className="relative bg-gray-100 p-2 shadow rounded-md">
         {discount !== null && (
@@ -212,12 +226,22 @@ function Page() {
             )}
           </div>
           <div className="mt-1 text-left">
-            <p className="font-normal text-gray-900 text-sm truncate capitalize">{product.name || ''}</p>
-            <p className="text-gray-700 text-xs truncate">{product.description || ''}</p>
+            <p className="font-normal text-gray-900 text-sm truncate capitalize">
+              {product.name || ''}
+            </p>
+            <p className="text-gray-700 text-xs truncate">
+              {product.description || ''}
+            </p>
             <div className="flex items-center mt-1">
-              {product.price !== undefined && <span className="font-normal text-gray-900 text-sm">₦{product.price.toFixed(2)}</span>}
+              {product.price !== undefined && (
+                <span className="font-normal text-gray-900 text-sm">
+                  ₦{product.price.toFixed(2)}
+                </span>
+              )}
               {product.fakePrice !== undefined && (
-                <span className="ml-2 text-gray-600 line-through text-xs">₦{product.fakePrice}</span>
+                <span className="ml-2 text-gray-600 line-through text-xs">
+                  ₦{product.fakePrice}
+                </span>
               )}
             </div>
           </div>
@@ -241,6 +265,7 @@ function Page() {
   return (
     <div className="bg-gray-100 overflow-x-hidden mb-20">
       <Navbar />
+      {/* Fixed header */}
       <div className="fixed top-0 left-0 w-full z-50">
         <SearchBar onSearch={handleSearch} placeholder="Search products..." />
         <div className="px-4 py-2 bg-gray-100 border-none"></div>
@@ -272,7 +297,7 @@ function Page() {
       {/* Offset content so it doesn't hide behind the fixed header */}
       <div className="pt-[180px] px-4">
         {searchQuery.trim() ? (
-          // Search Results View
+          // If searching, show search results
           <div onClick={(e) => e.stopPropagation()}>
             {displayedData.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
@@ -285,7 +310,7 @@ function Page() {
             )}
           </div>
         ) : (
-          // Infinite Scroll View with prefetching (scrollThreshold triggers fetching early)
+          // Otherwise, use InfiniteScroll
           <InfiniteScroll
             dataLength={data.length}
             next={fetchMoreData}

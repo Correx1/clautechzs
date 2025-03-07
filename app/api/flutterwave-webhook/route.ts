@@ -1,68 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
+// app/api/webhook/route.ts
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
+  // 1. Verify webhook signature
   const secretHash = process.env.FLUTTERWAVE_SECRET_HASH;
-  const signature = req.headers.get('verif-hash');
+  const signature = request.headers.get('verif-hash');
   
-  if (!signature || signature !== secretHash) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  if (!secretHash || !signature || signature !== secretHash) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
+  // 2. Process payload
+  const payload = await request.json();
+  
   try {
-    const payload = await req.json();
-    console.log('Webhook payload:', payload);
-
-    // Verify transaction
-    const verifyUrl = `https://api.flutterwave.com/v3/transactions/${payload.data.id}/verify`;
-    const response = await axios.get(verifyUrl, {
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_FLUTTER}`,
-      },
-    });
-
-    const transaction = response.data.data;
-    console.log('Verified transaction:', transaction);
-
-    if (transaction.status === 'successful' && transaction.amount === payload.data.amount) {
-      const meta = transaction.meta;
+    if (payload.event === 'charge.completed') {
+      const transactionId = payload.data.id;
       
-      // Prepare order data
-      const orderData = {
-        personName: meta.personName,
-        email: meta.email,
-        phone: meta.phone,
-        location: meta.location,
-        size: meta.size,
-        clothSize: meta.clothSize,
-        items: meta.items,
-        totalPrice: meta.totalPrice,
-        orderNumber: meta.orderNumber,
-        transactionId: transaction.id,
-        paymentStatus: transaction.status,
-      };
-
-      // Send to Google Sheets
-      const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL;
-      if (scriptURL) {
-        await fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orderData),
+      // 3. Verify transaction with Flutterwave
+      const verifyRes = await fetch(
+        `https://api.flutterwave.com/v3/transactions/${transactionId}/verify`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_FLUTTER}`,
+          },
+        }
+      );
+      
+      const verification = await verifyRes.json();
+      
+      if (verification.status === 'success' && verification.data.status === 'successful') {
+        // 4. Extract order data from meta
+        const meta = verification.data.meta;
+        
+        // 5. Submit to Google Sheets
+        await fetch(process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL!, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            personName: meta.personName,
+            email: meta.email,
+            phone: meta.phone,
+            location: meta.location,
+            size: meta.size,
+            clothSize: meta.clothSize,
+            items: meta.items,
+            totalPrice: meta.totalPrice,
+            orderNumber: meta.orderNumber,
+            transactionId: verification.data.id,
+            paymentStatus: 'successful'
+          }),
         });
       }
-
-      // Remove from pending orders
-      const pendingOrders = JSON.parse(localStorage?.getItem('pendingOrders') || '{}');
-      delete pendingOrders[meta.orderNumber];
-      localStorage?.setItem('pendingOrders', JSON.stringify(pendingOrders));
-
-      return NextResponse.json({ success: true });
     }
-
-    return NextResponse.json({ message: 'Verification failed' }, { status: 400 });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ message: 'Server error' }, { status: 500 });
+    console.error('Webhook processing error:', error);
+    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
   }
+
+  return NextResponse.json({ status: 'received' });
 }

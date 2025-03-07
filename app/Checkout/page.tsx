@@ -1,16 +1,17 @@
 /* eslint-disable react-hooks/rules-of-hooks */
+// app/checkout/page.tsx
 "use client";
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import CheckoutNav from '@/app/components/CheckoutNav';
 import { SecFormData, FormErrors } from '@/app/Interface';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useShoppingCart } from 'use-shopping-cart';
+import { useShoppingCart } from "use-shopping-cart";
 import { useToast } from '@/components/ui/use-toast';
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
-function CheckoutPage() {
+function Page() {
   const { toast } = useToast();
   const router = useRouter();
   const { clearCart } = useShoppingCart();
@@ -33,94 +34,89 @@ function CheckoutPage() {
   };
 
   function generateOrderNumber(): string {
-    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    let randomNum = Math.floor(100000 + Math.random() * 900000);
     return "CL." + randomNum;
   }
   
   const orderNumber = generateOrderNumber();
   const itemsString = searchParams.get("items") ?? "[]";
   const totalPriceString = searchParams.get("totalPrice") ?? "0";
-  // Parse the items string into an array of items
   const items = JSON.parse(itemsString) as { name: string; quantity: number }[];
   const totalPrice = parseFloat(totalPriceString);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
     if (submitting) return;
     setSubmitting(true);
 
-    // Validate form fields
     const newErrors: FormErrors = {};
     if (!formData.personName) newErrors.personName = 'Please enter your full name';
     if (!formData.email || !validateEmail(formData.email)) newErrors.email = 'Invalid email address';
     if (!formData.phone || !/^\d{11,}$/.test(formData.phone)) newErrors.phone = 'Invalid phone number';
     if (!formData.location) newErrors.location = 'Provide a delivery location';
-    if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50))
-      newErrors.size = 'Shoe size must be a number between 32 and 50';
-    if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase()))
+    if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)) {
+      newErrors.size = 'Shoe size must be a number between 32 and 48';
+    }
+    if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
       newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
+    }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const customerData = {
+    if (Object.keys(newErrors).length > 0) {
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const config: any = {
+        public_key: process.env.NEXT_PUBLIC_FLUTTER,
+        tx_ref: orderNumber,
+        amount: totalPrice,
+        currency: "NGN",
+        payment_options: "card,mobilemoney,ussd",
+        redirect_url: "/success",
+        customer: {
+          email: formData.email,
+          phone_number: formData.phone,
+          name: formData.personName,
+        },
+        meta: {
           personName: formData.personName,
           email: formData.email,
           phone: formData.phone,
           location: formData.location,
           size: formData.size,
           clothSize: formData.clothSize,
-          items: JSON.stringify(items),
-          totalPrice,
-          orderNumber,
-        };
+          items: itemsString,
+          totalPrice: totalPrice,
+          orderNumber: orderNumber,
+        },
+        customizations: {
+          title: "Clautechzs",
+          description: "Payment for items in cart",
+        },
+      };
 
-        // Store pending order in localStorage
-        const pendingOrders = JSON.parse(localStorage.getItem('pendingOrders') || '{}');
-        pendingOrders[orderNumber] = customerData;
-        localStorage.setItem('pendingOrders', JSON.stringify(pendingOrders));
-
-        // Update Flutterwave config
-        const config = {
-          public_key: process.env.NEXT_PUBLIC_FLUTTER!,
-          tx_ref: orderNumber,
-          amount: totalPrice,
-          currency: "NGN",
-          payment_options: "card,mobilemoney,ussd",
-          redirect_url: `${window.location.origin}/success?order_id=${orderNumber}`,
-          customer: {
-            email: formData.email,
-            phone_number: formData.phone,
-            name: formData.personName,
-          },
-          meta: {
-            ...customerData,
-            orderNumber, // Ensure orderNumber is in meta
-            _isWebhook: true // Flag for webhook
-          },
-          customizations: {
-            title: "Clautechzs",
-            description: "Payment for items in cart",
-            logo:""
-          },
-        };
-
-        const handleFlutterPayment = useFlutterwave(config);
-        handleFlutterPayment({
-          callback: (response) => {
-            console.log('Payment callback:', response);
-            closePaymentModal();
-          },
-          onClose: () => {
-            setSubmitting(false);
-          },
-        });
-      } catch (error) {
-        console.error("Submission error:", error);
-        toast({ title: "Error", description: "Failed to initiate payment" });
-        setSubmitting(false);
-      }
-    } else {
+      const handleFlutterPayment = useFlutterwave(config);
+      handleFlutterPayment({
+        callback: (response) => {
+          console.log(response);
+          closePaymentModal();
+          clearCart();
+          router.push('/success');
+        },
+        onClose: () => {
+          setSubmitting(false);
+        },
+      });
+    } catch (error) {
+      console.error("Error during submission:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your order. Please try again.",
+        duration: 3000,
+      });
       setSubmitting(false);
     }
   };
@@ -130,6 +126,7 @@ function CheckoutPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+
     if (errors[e.target.name as keyof FormErrors]) {
       setErrors({
         ...errors,
@@ -286,18 +283,4 @@ function CheckoutPage() {
   );
 }
 
-export default CheckoutPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default Page;

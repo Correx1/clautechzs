@@ -18,9 +18,9 @@ function CartIcon() {
       onClick={() => handleCartClick()}
     >
       <ShoppingBag 
-      size={27}
+      size={25}
       strokeWidth={1.5} />
-      <span>{cartCount}</span>
+      <span className=" font-bold text-sm text-[#f97e27] pb-4">{cartCount}</span>
     </Button>
   )
 }
@@ -39,11 +39,11 @@ export default function BottomNavbar() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-xl flex justify-around items-center py-4 z-50 mx-2">
+    <nav className="fixed bottom-0 left-0 w-full bg-[#fff] shadow-xl flex justify-around items-center py-3 z-50 mx-2">
       {/* Logo Section */}
-      <div className="cursor-pointer">
-        <Link href="/">
-          <Image src="/assets/fav.png" alt="logo" width={60} height={60} />
+      <div className="cursor-pointer outline-none">
+        <Link href="/" className=" outline-none">
+          <Image src="/assets/fav.png" alt="logo" width={50} height={50} />
         </Link>
       </div>
 
@@ -59,7 +59,7 @@ export default function BottomNavbar() {
             className="flex flex-col items-center"
           >
             <Icon
-              size={30}
+              size={25}
               strokeWidth={1.5}
               className={
                 isActive

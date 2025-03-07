@@ -205,11 +205,11 @@ function Page() {
 
 
   return (
-    <div className='bg-gray-100 overflow-x-hidden font-manrope'>
+    <div className='bg-gray-100 overflow-x-hidden font-manrope '>
       <Navbar/>
  
       <div className=' overflow-x-hidden'>
-        <div className="w-full md:px-12 px-3 lg:py-6 py-4 bg-gray-100  rounded-lg">
+        <div className="w-full md:px-12 px-4 lg:py-6 py-4 bg-gray-100  rounded-lg">
           <div className="items-center justify-center flex  w-auto ">
             <Image src="/assets/fav.png" alt='logo' width={100} height={100} priority={true} className=' w-auto' />
           </div>
