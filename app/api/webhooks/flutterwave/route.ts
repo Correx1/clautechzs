@@ -3,10 +3,15 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    // Retrieve the verification hash from the request headers
+    // Retrieve the header from the request
     const flutterwaveHash = request.headers.get('verif-hash');
-    const secretHash = process.env.FLUTTERWAVE_SECRET_HASH; // Set this in your .env.local
+    const secretHash = process.env.FLUTTERWAVE_SECRET_HASH;
+    
+    // Debug logging: print out the received hash and the expected secret.
+    console.log("Received verif-hash:", flutterwaveHash);
+    console.log("Expected secret hash:", secretHash);
 
+    // Verify that the header value matches your secret hash.
     if (!flutterwaveHash || flutterwaveHash !== secretHash) {
       console.error("Invalid webhook signature");
       return NextResponse.json({ message: 'Unauthorized webhook call' }, { status: 401 });
@@ -14,14 +19,14 @@ export async function POST(request: Request) {
 
     // Parse the webhook payload from Flutterwave
     const body = await request.json();
-    console.log("Received webhook:", body);
+    console.log("Received webhook payload:", body);
 
-    // Verify that the payment was successful.
+    // Check that payment status is successful
     if (body.status !== 'successful') {
       return NextResponse.json({ message: 'Payment not successful' }, { status: 400 });
     }
 
-    // Extract meta data (passed from the client during payment initiation)
+    // Extract meta data (which should be passed by the client in the payment request)
     const meta = body.meta || {};
     const orderData = {
       personName: meta.personName,
@@ -37,18 +42,23 @@ export async function POST(request: Request) {
       paymentStatus: body.status,
     };
 
-    // Submit order to Google Sheets
-    const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL ||process.env.GOOGLE_SHEET_SCRIPT_URL;
+    // Submit the order data to Google Sheets
+    const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL;
     if (!scriptURL) {
-      console.error("Google Sheets script URL not defined");
+      console.error("Google Sheets script URL not configured");
       return NextResponse.json({ message: 'Google Sheets URL not configured' }, { status: 500 });
     }
 
-    await fetch(scriptURL, {
+    const sheetResponse = await fetch(scriptURL, {
       method: 'POST',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData)
     });
+
+    if (!sheetResponse.ok) {
+      console.error("Error sending data to Google Sheets");
+      return NextResponse.json({ message: 'Failed to send data to Google Sheets' }, { status: 500 });
+    }
 
     /* 
     // Firebase code (completely commented out)
@@ -73,7 +83,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Order processed successfully' }, { status: 200 });
   } catch (error) {
-    console.error("Webhook processing error:", error);
+    console.error("Error in webhook:", error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

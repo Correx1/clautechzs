@@ -83,7 +83,7 @@ function Page() {
 
         // Configure Flutterwave payment with meta data carrying order details.
         const config: any = {
-          public_key: process.env.NEXT_PUBLIC_FLUTTER, // defined in your .env.local
+          public_key: process.env.NEXT_PUBLIC_FLUTTER || process.env.FLUTTER , // defined in your .env.local
           tx_ref: orderNumber,
           amount: totalPrice,
           currency: "NGN",
