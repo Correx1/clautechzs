@@ -1,9 +1,11 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-// /app/checkout/page.tsx
 "use client";
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import CheckoutNav from '@/app/components/CheckoutNav';
 import { SecFormData, FormErrors } from '@/app/Interface';
+// Firebase imports are already commented out in your code
+// import { db } from "@/app/firebase";
+// import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
 import { useToast } from '@/components/ui/use-toast';
@@ -33,7 +35,6 @@ function Page() {
     return emailRegex.test(email);
   };
 
-  // Generate a random order number
   function generateOrderNumber(): string {
     let randomNum = Math.floor(100000 + Math.random() * 900000);
     return "CL." + randomNum;
@@ -47,11 +48,13 @@ function Page() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+
     if (submitting) return;
+
     setSubmitting(true);
 
-    // Validate form fields
     const newErrors: FormErrors = {};
+
     if (!formData.personName) newErrors.personName = 'Please enter your full name';
     if (!formData.email || !validateEmail(formData.email)) newErrors.email = 'Invalid email address';
     if (!formData.phone || !/^\d{11,}$/.test(formData.phone)) newErrors.phone = 'Invalid phone number';
@@ -59,16 +62,20 @@ function Page() {
     if (
       formData.size.trim() !== '' &&
       (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)
-    ) newErrors.size = 'Shoe size must be a number between 32 and 50';
+    ) {
+      newErrors.size = 'Shoe size must be a number between 32 and 50';
+    }
     if (
       formData.clothSize.trim() !== '' &&
       !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())
-    ) newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
+    ) {
+      newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
+    }
 
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length === 0) {
       try {
-        // Build the customer/order data to pass in meta
         const customerData = {
           personName: formData.personName,
           email: formData.email,
@@ -81,21 +88,22 @@ function Page() {
           orderNumber,
         };
 
-        // Configure Flutterwave payment with meta data carrying order details.
+        localStorage.setItem('pendingOrderData', JSON.stringify(customerData));
+
         const config: any = {
-          public_key: process.env.NEXT_PUBLIC_FLUTTER || process.env.FLUTTER , // defined in your .env.local
+          public_key: process.env.NEXT_PUBLIC_FLUTTER || process.env.FLUTTER,
           tx_ref: orderNumber,
           amount: totalPrice,
           currency: "NGN",
           payment_options: "card,mobilemoney,ussd",
-          redirect_url: "/success", // User will be redirected here after payment
+          redirect_url: "/success",
           customer: {
             email: formData.email,
             phone_number: formData.phone,
             name: formData.personName,
           },
           meta: {
-            ...customerData,
+            ...customerData
           },
           customizations: {
             title: "Clautechzs",
@@ -132,6 +140,7 @@ function Page() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+
     if (errors[e.target.name as keyof FormErrors]) {
       setErrors({
         ...errors,
@@ -166,7 +175,6 @@ function Page() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Name */}
           <div className="mb-4">
             <label htmlFor="personName" className="block text-gray-700 text-base font-bold mb-2">
               Name
@@ -178,13 +186,15 @@ function Page() {
               placeholder="Your name"
               value={formData.personName}
               onChange={handleChange}
-              className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.personName && 'border-red-500'
+              }`}
             />
             {errors.personName && (
-              <p className="text-red-500 text-sm mt-1">{errors.personName}</p>
+              <p className="text-red-500 text-sm mt-1">Please enter your full name</p>
             )}
           </div>
-          {/* Email */}
+
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 text-base font-bold mb-2">
               Email
@@ -196,13 +206,15 @@ function Page() {
               placeholder="Your email"
               value={formData.email}
               onChange={handleChange}
-              className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.email && 'border-red-500'
+              }`}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              <p className="text-red-500 text-sm mt-1">Invalid email address</p>
             )}
           </div>
-          {/* Phone */}
+
           <div className="mb-4">
             <label htmlFor="phone" className="block text-gray-700 text-base font-bold mb-2">
               Contact
@@ -214,13 +226,15 @@ function Page() {
               placeholder="Phone number"
               value={formData.phone}
               onChange={handleChange}
-              className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.phone && 'border-red-500'
+              }`}
             />
             {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+              <p className="text-red-500 text-sm mt-1">Invalid phone no.</p>
             )}
           </div>
-          {/* Location */}
+
           <div className="mb-4">
             <label htmlFor="location" className="block text-gray-700 text-base font-bold mb-2">
               Delivery Location
@@ -232,13 +246,17 @@ function Page() {
               placeholder="Your preferred delivery location"
               value={formData.location}
               onChange={handleChange}
-              className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.location && 'border-red-500'
+              }`}
             />
             {errors.location && (
-              <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              <p className="text-red-500 text-sm mt-1">
+                Please enter your preferred delivery location
+              </p>
             )}
           </div>
-          {/* Optional: Shoe Size / Cloth Size */}
+
           <div>
             <h1 className="italic mt-2 mb-1">Only fill if it’s either shoes or clothes</h1>
             <div className="mb-4 flex flex-row w-full gap-3">
@@ -253,12 +271,15 @@ function Page() {
                   placeholder="For shoes"
                   value={formData.size}
                   onChange={handleChange}
-                  className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                    errors.size && 'border-red-500'
+                  }`}
                 />
                 {errors.size && (
                   <p className="text-red-500 text-sm mt-1">{errors.size}</p>
                 )}
               </div>
+
               <div>
                 <label htmlFor="clothSize" className="block text-gray-700 text-base font-bold mb-2">
                   (s, m, l, xl, xxl)
@@ -270,14 +291,19 @@ function Page() {
                   placeholder="For clothes"
                   value={formData.clothSize}
                   onChange={handleChange}
-                  className="border rounded w-full py-3 px-3 text-gray-800 placeholder:text-gray-400 bg-white shadow"
+                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                    errors.clothSize && 'border-red-500'
+                  }`}
                 />
                 {errors.clothSize && (
-                  <p className="text-red-500 text-sm mt-1">{errors.clothSize}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    Select from the above listed sizes
+                  </p>
                 )}
               </div>
             </div>
           </div>
+
           <Button disabled={submitting} className="mb-4 items-center justify-center" type="submit">
             {submitting ? "Processing..." : "Proceed with Payment"}
           </Button>
