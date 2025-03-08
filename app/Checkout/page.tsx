@@ -1,16 +1,17 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-// app/checkout/page.tsx
 "use client";
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import CheckoutNav from '@/app/components/CheckoutNav';
 import { SecFormData, FormErrors } from '@/app/Interface';
+// Commenting out firebase imports
+// import { db } from "@/app/firebase";
+// import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useShoppingCart } from "use-shopping-cart";
 import { useToast } from '@/components/ui/use-toast';
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FlutterwaveConfig } from 'flutterwave-react-v3/dist/types';
 
 function Page() {
   const { toast } = useToast();
@@ -18,7 +19,7 @@ function Page() {
   const { clearCart } = useShoppingCart();
   const searchParams = useSearchParams();
   const [errors, setErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // Track submission state
 
   const [formData, setSecFormData] = useState<SecFormData>({
     personName: '',
@@ -35,6 +36,7 @@ function Page() {
   };
 
   function generateOrderNumber(): string {
+    // Generate a random 6-digit number
     let randomNum = Math.floor(100000 + Math.random() * 900000);
     return "CL." + randomNum;
   }
@@ -42,50 +44,74 @@ function Page() {
   const orderNumber = generateOrderNumber();
   const itemsString = searchParams.get("items") ?? "[]";
   const totalPriceString = searchParams.get("totalPrice") ?? "0";
+  // Parse the items string into an array of items
   const items = JSON.parse(itemsString) as { name: string; quantity: number }[];
   const totalPrice = parseFloat(totalPriceString);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
-    if (submitting) return;
-    setSubmitting(true);
-
-    const newErrors: FormErrors = {};
-    if (!formData.personName) newErrors.personName = 'Please enter your full name';
-    if (!formData.email || !validateEmail(formData.email)) newErrors.email = 'Invalid email address';
-    if (!formData.phone || !/^\d{11,}$/.test(formData.phone)) newErrors.phone = 'Invalid phone number';
-    if (!formData.location) newErrors.location = 'Provide a delivery location';
-    if (formData.size.trim() !== '' && (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)) {
-      newErrors.size = 'Shoe size must be a number between 32 and 48';
+    if (submitting) {
+      return; // Prevent multiple submissions
     }
-    if (formData.clothSize.trim() !== '' && !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())) {
+
+    setSubmitting(true); // Set submission state to true
+
+    // Validate all fields
+    const newErrors: FormErrors = {};
+
+    if (!formData.personName) {
+      newErrors.personName = 'Please enter your full name';
+    }
+
+    if (!formData.email || !validateEmail(formData.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+    if (!formData.phone || !/^\d{11,}$/.test(formData.phone)) {
+      newErrors.phone = 'Invalid phone number';
+    }
+
+    if (!formData.location) {
+      newErrors.location = 'Provide a delivery location';
+    }
+    if (
+      formData.size.trim() !== '' &&
+      (isNaN(Number(formData.size)) || Number(formData.size) < 32 || Number(formData.size) > 50)
+    ) {
+      newErrors.size = 'Shoe size must be a number between 32 and 50';
+    }
+
+    if (
+      formData.clothSize.trim() !== '' &&
+      !['s', 'm', 'l', 'xl', 'xxl'].includes(formData.clothSize.toLowerCase())
+    ) {
       newErrors.clothSize = 'Invalid size. Choose from s, m, l, xl, xxl.';
     }
 
+    // Set errors or submit the form
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length === 0) {
       try {
-        const orderData = {
+        // Create data object
+        const customerData = {
           personName: formData.personName,
           email: formData.email,
           phone: formData.phone,
           location: formData.location,
           size: formData.size,
           clothSize: formData.clothSize,
-          items: itemsString,
-          totalPrice: totalPrice,
-          orderNumber: orderNumber,
+          items: JSON.stringify(items),
+          totalPrice,
+          orderNumber,
         };
-  
-        // Store in localStorage as fallback
-        localStorage.setItem('pendingOrderData', JSON.stringify(orderData));
-  
-        if (!process.env.NEXT_PUBLIC_FLUTTER) {
-          throw new Error('Payment gateway configuration error');
-        }
-  
-        const config: FlutterwaveConfig = {
+
+        // Store data in localStorage as a fallback
+        localStorage.setItem('pendingOrderData', JSON.stringify(customerData));
+
+        // Configure Flutterwave with webhook support
+        // We include all necessary information in the meta field to ensure the webhook has everything needed
+        const config: any = {
           public_key: process.env.NEXT_PUBLIC_FLUTTER,
           tx_ref: orderNumber,
           amount: totalPrice,
@@ -97,22 +123,42 @@ function Page() {
             phone_number: formData.phone,
             name: formData.personName,
           },
-          meta: orderData,
+          meta: {
+            location: formData.location,
+            size: formData.size,
+            clothSize: formData.clothSize,
+            items: JSON.stringify(items),
+            // Add any other data you want passed to the webhook
+          },
           customizations: {
             title: "Clautechzs",
             description: "Payment for items in cart",
-            logo:""
           },
         };
-  
+
+        // Initialize and open Flutterwave payment
         const handleFlutterPayment = useFlutterwave(config);
         handleFlutterPayment({
           callback: (response) => {
-            console.log('Payment callback:', response);
+            console.log("Payment response:", response);
             closePaymentModal();
-            router.push('/success');
+            
+            // Only redirect if there's a successful response
+            if (response.status === "successful") {
+              // The webhook will handle the order processing, but we still redirect
+              // the user to the success page for a good user experience
+              router.push(`/success?status=${response.status}&tx_ref=${response.tx_ref}&transaction_id=${response.transaction_id}`);
+            } else {
+              toast({
+                title: "Payment Failed",
+                description: "There was an error processing your payment. Please try again.",
+                duration: 3000,
+              });
+              setSubmitting(false);
+            }
           },
           onClose: () => {
+            console.log("Payment modal closed");
             setSubmitting(false);
           },
         });
@@ -125,21 +171,18 @@ function Page() {
         });
         setSubmitting(false);
       }
+    } else {
+      setSubmitting(false); // Reset submission state if validation fails
+    }
   };
-  }
 
-
-
-
-
-
-  
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setSecFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
 
+    // Clear error message when the user starts typing
     if (errors[e.target.name as keyof FormErrors]) {
       setErrors({
         ...errors,
@@ -147,12 +190,11 @@ function Page() {
       });
     }
   };
-  
 
   return (
     <div className='overflow-x-hidden mb-20'>
       <CheckoutNav />
-      <div className="w-full md:px-12 px-8 md:py-6 py-3 bg-gray-100 rounded-lg">
+      <div className="w-full md:px-8 px-2 md:py-6 py-3 bg-gray-100 rounded-lg">
         <div className="flex items-center justify-center">
           <Image src="/assets/fav.png" alt="logo" width={100} height={100} priority className="w-auto" />
         </div>
@@ -186,7 +228,9 @@ function Page() {
               placeholder="Your name"
               value={formData.personName}
               onChange={handleChange}
-              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.personName && 'border-red-500'}`}
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.personName && 'border-red-500'
+              }`}
             />
             {errors.personName && (
               <p className="text-red-500 text-sm mt-1">Please enter your full name</p>
@@ -204,7 +248,9 @@ function Page() {
               placeholder="Your email"
               value={formData.email}
               onChange={handleChange}
-              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.email && 'border-red-500'}`}
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.email && 'border-red-500'
+              }`}
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">Invalid email address</p>
@@ -222,7 +268,9 @@ function Page() {
               placeholder="Phone number"
               value={formData.phone}
               onChange={handleChange}
-              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.phone && 'border-red-500'}`}
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.phone && 'border-red-500'
+              }`}
             />
             {errors.phone && (
               <p className="text-red-500 text-sm mt-1">Invalid phone no.</p>
@@ -240,15 +288,19 @@ function Page() {
               placeholder="Your preferred delivery location"
               value={formData.location}
               onChange={handleChange}
-              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.location && 'border-red-500'}`}
+              className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                errors.location && 'border-red-500'
+              }`}
             />
             {errors.location && (
-              <p className="text-red-500 text-sm mt-1">Please enter your preferred delivery location</p>
+              <p className="text-red-500 text-sm mt-1">
+                Please enter your preferred delivery location
+              </p>
             )}
           </div>
 
           <div>
-            <h1 className="italic mt-2 mb-1">Only fill if it’s either shoes or clothes</h1>
+            <h1 className="italic mt-2 mb-1">Only fill if its either shoes or clothes</h1>
             <div className="mb-4 flex flex-row w-full gap-3">
               <div>
                 <label htmlFor="size" className="block text-gray-700 text-base font-bold mb-2">
@@ -261,7 +313,9 @@ function Page() {
                   placeholder="For shoes"
                   value={formData.size}
                   onChange={handleChange}
-                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.size && 'border-red-500'}`}
+                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                    errors.size && 'border-red-500'
+                  }`}
                 />
                 {errors.size && (
                   <p className="text-red-500 text-sm mt-1">{errors.size}</p>
@@ -279,10 +333,14 @@ function Page() {
                   placeholder="For clothes"
                   value={formData.clothSize}
                   onChange={handleChange}
-                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${errors.clothSize && 'border-red-500'}`}
+                  className={`border rounded w-full py-3 px-3 text-gray-800 text-base placeholder:text-gray-400 outline-[#f99b57] border-none bg-white shadow-[rgba(0,_0,_0,0.24)_0px_3px_4px] ${
+                    errors.clothSize && 'border-red-500'
+                  }`}
                 />
                 {errors.clothSize && (
-                  <p className="text-red-500 text-sm mt-1">Select from the above listed sizes</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    Select from the above listed sizes
+                  </p>
                 )}
               </div>
             </div>
