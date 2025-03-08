@@ -4,7 +4,7 @@ import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
-import { Home, Wrench } from "lucide-react"
+import { Home, ListPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag } from "lucide-react"
 import { useShoppingCart } from "use-shopping-cart"
@@ -18,7 +18,7 @@ function CartIcon() {
       onClick={() => handleCartClick()}
     >
       <ShoppingBag 
-      size={27}
+      size={25}
       strokeWidth={1.5} />
       <span>{cartCount}</span>
     </Button>
@@ -35,15 +35,15 @@ export default function BottomNavbar() {
   // Define navigation items (excluding the logo and cart button)
   const navItems = [
     { name: "Home", href: "/", icon: Home },
-    { name: "Services", href: "/Services", icon: Wrench },
+    { name: "Services", href: "/Services", icon:ListPlus },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-xl flex justify-around items-center py-4 z-50 mx-2">
+    <nav className="fixed bottom-0 left-0 w-full bg-[#fff] shadow-xl flex justify-around items-center py-3 z-50 mx-2">
       {/* Logo Section */}
       <div className="cursor-pointer">
         <Link href="/">
-          <Image src="/assets/fav.png" alt="logo" width={60} height={60} />
+          <Image src="/assets/fav.png" alt="logo" width={50} height={50} />
         </Link>
       </div>
 
@@ -59,7 +59,7 @@ export default function BottomNavbar() {
             className="flex flex-col items-center"
           >
             <Icon
-              size={30}
+              size={25}
               strokeWidth={1.5}
               className={
                 isActive

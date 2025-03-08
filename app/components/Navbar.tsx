@@ -4,9 +4,9 @@ import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
-import { Home, Wrench } from "lucide-react"
+import { Home, ListPlus} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag } from "lucide-react"
+import { ShoppingCart} from "lucide-react"
 import { useShoppingCart } from "use-shopping-cart"
 
 // CartIcon Component
@@ -17,7 +17,7 @@ function CartIcon() {
       className="px-3 text-gray-800 bg-non hover:bg-transparent hover:text-[#f97e27] fontb"
       onClick={() => handleCartClick()}
     >
-      <ShoppingBag 
+      <ShoppingCart
       size={25}
       strokeWidth={1.5} />
       <span className=" font-bold text-sm text-[#f97e27] pb-4">{cartCount}</span>
@@ -35,7 +35,7 @@ export default function BottomNavbar() {
   // Define navigation items (excluding the logo and cart button)
   const navItems = [
     { name: "Home", href: "/", icon: Home },
-    { name: "Services", href: "/Services", icon: Wrench },
+    { name: "Services", href: "/Services", icon: ListPlus },
   ]
 
   return (

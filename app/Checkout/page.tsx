@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { FlutterwaveConfig } from 'flutterwave-react-v3/dist/types';
 
 function Page() {
   const { toast } = useToast();
@@ -63,25 +64,9 @@ function Page() {
     }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      const config: any = {
-        public_key: process.env.NEXT_PUBLIC_FLUTTER,
-        tx_ref: orderNumber,
-        amount: totalPrice,
-        currency: "NGN",
-        payment_options: "card,mobilemoney,ussd",
-        redirect_url: "/success",
-        customer: {
-          email: formData.email,
-          phone_number: formData.phone,
-          name: formData.personName,
-        },
-        meta: {
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        const orderData = {
           personName: formData.personName,
           email: formData.email,
           phone: formData.phone,
@@ -91,36 +76,64 @@ function Page() {
           items: itemsString,
           totalPrice: totalPrice,
           orderNumber: orderNumber,
-        },
-        customizations: {
-          title: "Clautechzs",
-          description: "Payment for items in cart",
-        },
-      };
-
-      const handleFlutterPayment = useFlutterwave(config);
-      handleFlutterPayment({
-        callback: (response) => {
-          console.log(response);
-          closePaymentModal();
-          clearCart();
-          router.push('/success');
-        },
-        onClose: () => {
-          setSubmitting(false);
-        },
-      });
-    } catch (error) {
-      console.error("Error during submission:", error);
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your order. Please try again.",
-        duration: 3000,
-      });
-      setSubmitting(false);
-    }
+        };
+  
+        // Store in localStorage as fallback
+        localStorage.setItem('pendingOrderData', JSON.stringify(orderData));
+  
+        if (!process.env.NEXT_PUBLIC_FLUTTER) {
+          throw new Error('Payment gateway configuration error');
+        }
+  
+        const config: FlutterwaveConfig = {
+          public_key: process.env.NEXT_PUBLIC_FLUTTER,
+          tx_ref: orderNumber,
+          amount: totalPrice,
+          currency: "NGN",
+          payment_options: "card,mobilemoney,ussd",
+          redirect_url: "/success",
+          customer: {
+            email: formData.email,
+            phone_number: formData.phone,
+            name: formData.personName,
+          },
+          meta: orderData,
+          customizations: {
+            title: "Clautechzs",
+            description: "Payment for items in cart",
+            logo:""
+          },
+        };
+  
+        const handleFlutterPayment = useFlutterwave(config);
+        handleFlutterPayment({
+          callback: (response) => {
+            console.log('Payment callback:', response);
+            closePaymentModal();
+            router.push('/success');
+          },
+          onClose: () => {
+            setSubmitting(false);
+          },
+        });
+      } catch (error) {
+        console.error("Error during submission:", error);
+        toast({
+          title: "Submission Failed",
+          description: "There was an error submitting your order. Please try again.",
+          duration: 3000,
+        });
+        setSubmitting(false);
+      }
   };
+  }
 
+
+
+
+
+
+  
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setSecFormData({
       ...formData,
@@ -134,11 +147,12 @@ function Page() {
       });
     }
   };
+  
 
   return (
     <div className='overflow-x-hidden mb-20'>
       <CheckoutNav />
-      <div className="w-full md:px-8 px-2 md:py-6 py-3 bg-gray-100 rounded-lg">
+      <div className="w-full md:px-12 px-8 md:py-6 py-3 bg-gray-100 rounded-lg">
         <div className="flex items-center justify-center">
           <Image src="/assets/fav.png" alt="logo" width={100} height={100} priority className="w-auto" />
         </div>
