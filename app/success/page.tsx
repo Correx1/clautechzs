@@ -17,108 +17,91 @@ const SuccessPage: React.FC = () => {
   const status = searchParams.get('status');
   const tx_ref = searchParams.get('tx_ref');
   const transaction_id = searchParams.get('transaction_id');
-  const [processingState, setProcessingState] = useState<'pending' | 'success' | 'failed'>('pending');
+  
+  // Use a ref to track if we've processed this transaction
+  const [isProcessed, setIsProcessed] = useState<boolean>(false);
+  const [processingState, setProcessingState] = useState<'pending' | 'success' | 'failed'>(
+    status === 'successful' ? 'pending' : 'failed'
+  );
 
+  // Run this effect only once
   useEffect(() => {
-    // This effect now focuses on local cleanup rather than order processing
-    // since the webhook handles the actual order processing
-    
-    // Only proceed if there's a successful status
-    if (status !== 'successful') {
-      setProcessingState('failed');
+    // Skip if already processed or not successful
+    if (isProcessed || status !== 'successful') {
       return;
     }
 
-    try {
-      // Clear cart as payment was successful
-      clearCart();
-      
-      // Cleanup stored data (optional, but good practice)
-      localStorage.removeItem('pendingOrderData');
-      
-      // Set success state
-      setProcessingState('success');
-      
-      // As a fallback, we still try to submit the order data in case the webhook failed
-      // This creates a race condition, but Flutterwave should deduplicate transactions
-      const submitOrderAsFallback = async () => {
-        try {
-          // Get stored order data
-          const storedDataString = localStorage.getItem('pendingOrderData');
-          if (!storedDataString) {
-            console.log("No pending order data found for fallback processing");
-            return;
+    const processSuccessfulPayment = async () => {
+      try {
+        // Mark as processed right away to prevent re-runs
+        setIsProcessed(true);
+        
+        // Clear cart
+        clearCart();
+        
+        // Cleanup stored data
+        localStorage.removeItem('pendingOrderData');
+        
+        // Update state to success
+        setProcessingState('success');
+        
+        // Fallback order processing after delay
+        setTimeout(async () => {
+          try {
+            // Get stored order data
+            const storedDataString = localStorage.getItem('pendingOrderData');
+            if (!storedDataString) {
+              console.log("No pending order data found for fallback processing");
+              return;
+            }
+    
+            const orderData = JSON.parse(storedDataString);
+            
+            // Add transaction details
+            const completeOrderData = {
+              ...orderData,
+              transactionId: transaction_id || "",
+              paymentStatus: status
+            };
+    
+            // Check if this transaction has already been processed
+            const processedTxs = JSON.parse(localStorage.getItem('processedTransactions') || '{}');
+            if (transaction_id && processedTxs[transaction_id]) {
+              console.log("Transaction already processed in fallback:", transaction_id);
+              return;
+            }
+    
+            // Mark as processed
+            if (transaction_id) {
+              processedTxs[transaction_id] = true;
+              localStorage.setItem('processedTransactions', JSON.stringify(processedTxs));
+            }
+    
+            // Send to Google Sheets as fallback
+            const scriptURL = process.env.GOOGLE_SHEET_SCRIPT_URL || 
+            process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
+            await fetch(scriptURL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(completeOrderData),
+            });
+    
+            console.log("Fallback order processing completed");
+          } catch (error) {
+            console.error("Error in fallback processing:", error);
           }
+        }, 5000);
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        setProcessingState('success'); // Still show success to user
+      }
+    };
 
-          const orderData = JSON.parse(storedDataString);
-          
-          // Add transaction details
-          const completeOrderData = {
-            ...orderData,
-            transactionId: transaction_id || "",
-            paymentStatus: status
-          };
-
-          // Check if this transaction has already been processed
-          const processedTxs = JSON.parse(localStorage.getItem('processedTransactions') || '{}');
-          if (transaction_id && processedTxs[transaction_id]) {
-            console.log("Transaction already processed in fallback:", transaction_id);
-            return;
-          }
-
-          // Mark as processed
-          if (transaction_id) {
-            processedTxs[transaction_id] = true;
-            localStorage.setItem('processedTransactions', JSON.stringify(processedTxs));
-          }
-
-          // Send to Google Sheets as fallback
-          const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
-          await fetch(scriptURL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(completeOrderData),
-          });
-
-          // Firebase would go here if uncommented
-          /*
-          const DeliveryData = {
-            Name: orderData.personName,
-            Email: orderData.email,
-            Phone: orderData.phone,
-            location: orderData.location,
-            Shoe_Size: orderData.size || "",
-            Cloth_Size: orderData.clothSize || "",
-            createdAt: serverTimestamp(),
-            items: JSON.parse(orderData.items),
-            totalPrice: orderData.totalPrice,
-            orderNumber: orderData.orderNumber,
-            transactionId: transaction_id || "",
-            paymentStatus: status
-          };
-          await addDoc(collection(db, "Orders"), { ...DeliveryData });
-          */
-
-          console.log("Fallback order processing completed");
-        } catch (error) {
-          console.error("Error in fallback processing:", error);
-          // This is just a fallback, so we don't change the UI state on failure
-        }
-      };
-
-      // Execute the fallback after a delay to give the webhook time to process
-      setTimeout(submitOrderAsFallback, 5000);
-      
-    } catch (error) {
-      console.error("Error in success page:", error);
-      // We still show success to the user if payment was successful
-      // The webhook should have handled the order processing
-      setProcessingState('success');
-    }
-  }, [status, tx_ref, transaction_id, clearCart]);
+    processSuccessfulPayment();
+  }, [status, transaction_id, clearCart, isProcessed]);
 
   // If payment failed, show failure page
   if (status !== 'successful') {

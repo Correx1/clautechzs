@@ -56,7 +56,8 @@ async function processOrder(payload: any) {
     };
 
     // Send to Google Sheets
-    const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
+    const scriptURL = process.env.GOOGLE_SHEET_SCRIPT_URL || 
+    process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || "";
     
     await fetch(scriptURL, {
       method: "POST",

@@ -112,7 +112,7 @@ function Page() {
         // Configure Flutterwave with webhook support
         // We include all necessary information in the meta field to ensure the webhook has everything needed
         const config: any = {
-          public_key: process.env.NEXT_PUBLIC_FLUTTER,
+          public_key: process.env.NEXT_PUBLIC_FLUTTER  || process.env.FLUTTER  ,
           tx_ref: orderNumber,
           amount: totalPrice,
           currency: "NGN",
@@ -356,3 +356,8 @@ function Page() {
 }
 
 export default Page;
+
+
+
+
+

@@ -126,7 +126,7 @@ function Page() {
 
 
   
-        const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL_SERVICE || ""; 
+        const scriptURL = process.env.GOOGLE_SHEET_SCRIPT_URL_SERVICE || ""; 
         const response = await fetch(scriptURL, {
           method: "POST",
           mode: "no-cors",
