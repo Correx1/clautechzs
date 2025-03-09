@@ -152,7 +152,7 @@ function Page() {
   return (
     <div className='overflow-x-hidden mb-20'>
       <CheckoutNav />
-      <div className="w-full md:px-8 px-2 md:py-6 py-3 bg-gray-100 rounded-lg">
+      <div className="w-full md:px-8 px-4 md:py-6 py-3 bg-gray-100 rounded-lg">
         <div className="flex items-center justify-center">
           <Image src="/assets/fav.png" alt="logo" width={100} height={100} priority className="w-auto" />
         </div>
@@ -160,16 +160,16 @@ function Page() {
           <p className="text-lg text-gray-800 font-semibold">Order No: {orderNumber}</p>
           <span className="italic text-sm">Required on delivery</span>
         </div>
-        <div className="px-6">
-          <h1 className="text-lg text-gray-700 font-bold">Items</h1>
+        <div className="px-4">
+          <h1 className="text-sm md:text-base text-gray-700 font-bold">Items</h1>
           <ul>
             {items.map((item, index) => (
-              <li key={index} className="text-lg">
+              <li key={index} className="text-sm md:text-base">
                 {item.quantity} {item.name}
               </li>
             ))}
           </ul>
-          <p className="py-2 text-lg text-gray-800 font-bold">
+          <p className="py-2 text-sm md:text-base text-gray-800 font-bold">
             Total price: ₦{totalPrice.toFixed(2)}
           </p>
         </div>
