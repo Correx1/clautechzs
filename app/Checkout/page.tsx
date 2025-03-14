@@ -95,7 +95,7 @@ function Page() {
           tx_ref: orderNumber,
           amount: totalPrice,
           currency: "NGN",
-          payment_options: "card,mobilemoney,ussd",
+          payment_options: "card,mobilemoney,ussd,banktransfer,account,opay",
           redirect_url: "/success",
           customer: {
             email: formData.email,
