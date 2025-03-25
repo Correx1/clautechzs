@@ -14,41 +14,53 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = body.data;
 
-    // Construct order data from webhook payload
-    const orderData = {
-      personName: data.customer.name,
-      email: data.customer.email,
-      phone: data.customer.phoneNumber,
-      location: data.meta.location,
-      size: data.meta.size,
-      clothSize: data.meta.clothSize,
-      items: data.meta.items, // Stringified items from checkout
-      totalPrice: data.amount,
-      orderNumber: data.txRef,
-      transactionId: data.id,
-      paymentStatus: data.status,
-    };
+    // Robust status checking for successful transactions
+    const validStatuses = ['successful', 'completed'];
+    const isSuccessfulTransaction = validStatuses.some(
+      status => data.status.toLowerCase() === status
+    );
 
-    // Send to Google Sheets
-    const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || process.env.GOOGLE_SHEET_SCRIPT_URL;
-    if (!scriptURL) {
-      throw new Error('Google Sheets script URL not configured');
+    if (!isSuccessfulTransaction) {
+      console.warn(`Skipping webhook for non-successful status: ${data.status}`);
+      return NextResponse.json({ message: 'Payment not completed' }, { status: 200 });
     }
 
-    const response = await fetch(scriptURL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(orderData),
-    });
+    // Construct order data from webhook payload  
+    const orderData = {  
+      personName: data.customer.name,  
+      email: data.customer.email,  
+      phone: data.customer.phoneNumber,  
+      location: data.meta?.location || '',
+      size: data.meta?.size || '',
+      clothSize: data.meta?.clothSize || '', 
+      items: data.meta?.items || '', // Stringified items from checkout  
+      totalPrice: data.amount,  
+      orderNumber: data.txRef,  
+      transactionId: data.id,  
+      paymentStatus: data.status,  
+    };  
 
-    if (!response.ok) {
-      throw new Error('Failed to send data to Google Sheets');
-    }
+    // Send to Google Sheets  
+    const scriptURL = process.env.NEXT_PUBLIC_GOOGLE_SHEET_SCRIPT_URL || process.env.GOOGLE_SHEET_SCRIPT_URL;  
+    if (!scriptURL) {  
+      throw new Error('Google Sheets script URL not configured');  
+    }  
 
-    console.log('Webhook processed successfully:', data.txRef);
+    const response = await fetch(scriptURL, {  
+      method: 'POST',  
+      headers: {  
+        'Content-Type': 'application/json',  
+      },  
+      body: JSON.stringify(orderData),  
+    });  
+
+    if (!response.ok) {  
+      throw new Error('Failed to send data to Google Sheets');  
+    }  
+
+    console.log('Webhook processed successfully:', data.txRef);  
     return NextResponse.json({ message: 'Order processed' });
+
   } catch (error) {
     console.error('Error processing webhook:', error);
     return NextResponse.json({ error: 'Failed to process order' }, { status: 500 });
