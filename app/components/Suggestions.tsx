@@ -10,7 +10,7 @@ interface SuggestionsProps {
   currentId?: string;
 }
 
-const transactionFeeRate = 0.0147; // 1.47%
+const transactionFeeRate = 0.021; // 1.47%
 const vatRate = 0.075; // 7.5%
 
 // Helper function to update the product's price based on the revised VAT logic.
