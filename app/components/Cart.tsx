@@ -36,6 +36,8 @@ export default function Cart() {
 
         <div className="h-full flex flex-col justify-between ">
           <div className="mt-8 flex-1 overflow-y-auto no-scrollbar scroll-smooth">
+                          <p className="italic text-sm text-gray-400">Please site is under maintainance</p>
+
             <ul className="-my-6 divide-y divide-gray-300 overflow-y-auto">
               {cartCount === 0 ? (
                 <h1 className="py-6 font-semibold text-sm sm:text-base">
@@ -133,6 +135,7 @@ export default function Cart() {
                   }}
                 >
                   <Button
+           disabled 
                     className="w-full"
                     onClick={() => handleCartClick()}
                   >
