@@ -333,7 +333,7 @@ function Page() {
           </InfiniteScroll>
         )}
       </div>
-      <FloatingWhatsappButton phoneNumber="2349161348026" />
+      <FloatingWhatsappButton phoneNumber="2347038636315" />
     </div>
   );
 }

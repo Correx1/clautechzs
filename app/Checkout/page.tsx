@@ -12,6 +12,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import FloatingWhatsappButton from "@/app/components/Whatsapp";
+
 
 function Page() {
   const { toast } = useToast();
@@ -150,7 +152,8 @@ function Page() {
   };
 
   return (
-    <div className='overflow-x-hidden mb-20'>
+    <div className="div">
+    <div className='overflow-x-hidden mb-20  '>
       <CheckoutNav />
       <div className="w-full md:px-8 px-4 md:py-6 py-3 bg-gray-100 rounded-lg">
         <div className="flex items-center justify-center">
@@ -303,13 +306,19 @@ function Page() {
               </div>
             </div>
           </div>
+<p className="items-center p-10 italic text-sm text-gray-500">Please site is under maintainance, 
+  kindly reach out via whatsapp or any sales person in school</p>
 
+{/* 
           <Button disabled={submitting} className="mb-4 items-center justify-center" type="submit">
             {submitting ? "Processing..." : "Proceed with Payment"}
-          </Button>
+          </Button> */}
         </form>
       </div>
     </div>
+          <FloatingWhatsappButton phoneNumber="2347038636315" />
+
+       </div>
   );
 }
 
